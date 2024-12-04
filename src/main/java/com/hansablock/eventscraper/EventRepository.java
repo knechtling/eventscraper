@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-    static List<Event> findByTitle(String title);
+    List<Event> findByTitle(String title);
 }
