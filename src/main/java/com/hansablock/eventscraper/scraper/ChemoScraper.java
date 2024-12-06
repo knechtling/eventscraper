@@ -51,14 +51,15 @@ public class ChemoScraper implements Scraper {
                 String title = event.select(".elementor-element-a0688f1 h4").text();
 
                 // Parse genres
-                Elements genreElements = event.select(".jet-listing-dynamic-repeater__item");
-                String genre = genreElements.stream()
-                        .map(Element::text)
-                        .reduce((first, second) -> first + "\n" + second) // Concatenate with newlines
-                        .orElse("");
+                Elements genreElements = event.select("div.jet-listing-dynamic-repeater__items:not(:has(h4))");
+                StringBuilder genre = new StringBuilder();
+
+                for (Element genreElement : genreElements) {
+                    genre.append(genreElement.text()).append("\n");
+                }
 
                 String location = "Chemiefabrik";
-                Event newEvent = new Event(null, title, location, date, genre, entryTime, startTime, priceText);
+                Event newEvent = new Event(null, title, location, date, genre.toString(), entryTime, startTime, priceText);
                 events.add(newEvent);
             }
         } catch (IOException e) {
