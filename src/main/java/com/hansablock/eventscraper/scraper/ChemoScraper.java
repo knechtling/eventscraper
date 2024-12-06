@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Component
 public class ChemoScraper implements Scraper {
@@ -39,9 +40,12 @@ public class ChemoScraper implements Scraper {
                 LocalTime entryTime = parseTime(event, ".elementor-element-6c7315b .elementor-widget-container", "Einlass:");
                 LocalTime startTime = parseTime(event, ".elementor-element-c75cd6a .elementor-widget-container", "Beginn:");
 
-                // Parse price (use AK price)
-                String priceText = event.select(".jet-listing-dynamic-field__content:contains(AK)").text();
-                BigDecimal price = parsePrice(priceText);
+                String priceRegex = "(?:AK|VVK): \\d+(?:(?:\\.|\\,)\\d{1,2})?";
+                Elements priceElements = event.select(".jet-listing-dynamic-field__content:matches(" + priceRegex + ")");
+                String priceText = priceElements.stream()
+                        .map(Element::text)
+                        .distinct()
+                        .collect(Collectors.joining("\n"));
 
                 // Parse title
                 String title = event.select(".elementor-element-a0688f1 h4").text();
@@ -54,7 +58,7 @@ public class ChemoScraper implements Scraper {
                         .orElse("");
 
                 String location = "Chemiefabrik";
-                Event newEvent = new Event(null, title, location, date, genre, entryTime, startTime, price);
+                Event newEvent = new Event(null, title, location, date, genre, entryTime, startTime, priceText);
                 events.add(newEvent);
             }
         } catch (IOException e) {
@@ -67,9 +71,9 @@ public class ChemoScraper implements Scraper {
     /**
      * Helper method to parse time from the event element.
      *
-     * @param event      the event element
-     * @param selector   the CSS selector for the time element
-     * @param prefix     the prefix to identify the time string
+     * @param event    the event element
+     * @param selector the CSS selector for the time element
+     * @param prefix   the prefix to identify the time string
      * @return the parsed LocalTime, or null if not found
      */
     private LocalTime parseTime(Element event, String selector, String prefix) {
@@ -82,20 +86,5 @@ public class ChemoScraper implements Scraper {
             }
         }
         return null;
-    }
-
-    /**
-     * Helper method to parse price from the price text.
-     *
-     * @param priceText the price text
-     * @return the parsed BigDecimal price, or BigDecimal.ZERO if parsing fails
-     */
-    private BigDecimal parsePrice(String priceText) {
-        Pattern pattern = Pattern.compile("\\d+(\\.\\d{1,2})?");
-        Matcher matcher = pattern.matcher(priceText);
-        if (matcher.find()) {
-            return new BigDecimal(matcher.group());
-        }
-        return BigDecimal.ZERO;
     }
 }
