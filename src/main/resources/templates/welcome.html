@@ -22,7 +22,7 @@
                     <th>Title</th>
                     <th>Location</th>
                     <th>Date</th>
-                    <th>Genre</th>
+                    <th>Description</th>
                     <th>Einlass</th>
                     <th>Beginn</th>
                     <th>Price</th>
@@ -33,7 +33,7 @@
                     <td th:text="${event.title}"></td>
                     <td th:text="${event.location}"></td>
                     <td th:text="${event.date}"></td>
-                    <td th:text="${event.genre}"></td>
+                    <td th:utext="${event.description}"></td>
                     <td th:text="${event.einlass}"></td>
                     <td th:text="${event.beginn}"></td>
                     <td th:text="${event.price}"></td>
