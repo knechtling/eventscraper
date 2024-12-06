@@ -2,7 +2,6 @@ package com.hansablock.eventscraper;
 
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
@@ -19,12 +18,12 @@ public class Event {
     private String genre;
     private LocalTime einlass;
     private LocalTime beginn;
-    private BigDecimal price;
+    private String price;
 
     public Event() {
     }
 
-    public Event(Long id, String title, String location, LocalDate date, String genre, LocalTime einlass, LocalTime beginn, BigDecimal price) {
+    public Event(Long id, String title, String location, LocalDate date, String genre, LocalTime einlass, LocalTime beginn, String price) {
         this.id = id;
         this.title = title;
         this.location = location;
@@ -91,11 +90,11 @@ public class Event {
         this.beginn = beginn;
     }
 
-    public BigDecimal getPrice() {
+    public String getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(String price) {
         this.price = price;
     }
 
