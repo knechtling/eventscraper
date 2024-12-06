@@ -26,8 +26,10 @@ public class ChemoScraper implements Scraper {
         List<Event> events = new ArrayList<>();
 
         try {
-            Document doc = Jsoup.connect("https://www.chemiefabrik.info/gigs-2/").get();
-            Elements eventList = doc.select("div.jet-listing-grid__item");
+            Document doc = Jsoup.connect("https://www.chemiefabrik.info/gigs/").get();
+            Elements eventList = doc.select("div.jet-listing-grid__item" +
+                    ":not(:contains(abgesagt))" +
+                    ":not(:contains(verlegt))");
 
             for (Element event : eventList) {
                 // Parse date
@@ -50,18 +52,18 @@ public class ChemoScraper implements Scraper {
                 // Parse title
                 String title = event.select(".elementor-element-a0688f1 h4").text();
 
-                // Parse genres
-                Elements genreElements = event.select("div.jet-listing-dynamic-repeater__items:not(:has(h4))");
-                StringBuilder genre = new StringBuilder();
+                // Parse description
+                Elements descriptionElements = event.select("div.jet-listing-dynamic-repeater__item:not(:has(h4)):has(.bandlink)");
+                StringBuilder description = new StringBuilder();
 
-                for (Element genreElement : genreElements) {
-                    genre.append(genreElement.text()).append("\n");
+                for (Element descriptionElement : descriptionElements) {
+                    description.append(descriptionElement.text()).append("<br />");
                 }
 
+
                 String location = "Chemiefabrik";
-                Event newEvent = new Event(null, title, location, date, genre.toString(), entryTime, startTime, priceText);
-                events.add(newEvent);
-            }
+                Event newEvent = new Event(null, title, location, date, description.toString().trim(), entryTime, startTime, priceText);
+                events.add(newEvent);            }
         } catch (IOException e) {
             e.printStackTrace();
         }

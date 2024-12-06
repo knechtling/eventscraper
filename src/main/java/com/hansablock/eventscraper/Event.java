@@ -15,7 +15,8 @@ public class Event {
     private String title;
     private String location;
     private LocalDate date;
-    private String genre;
+    @Column(length = 1000)
+    private String description;
     private LocalTime einlass;
     private LocalTime beginn;
     private String price;
@@ -23,12 +24,12 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String title, String location, LocalDate date, String genre, LocalTime einlass, LocalTime beginn, String price) {
+    public Event(Long id, String title, String location, LocalDate date, String description, LocalTime einlass, LocalTime beginn, String price) {
         this.id = id;
         this.title = title;
         this.location = location;
         this.date = date;
-        this.genre = genre;
+        this.description = description;
         this.einlass = einlass;
         this.beginn = beginn;
         this.price = price;
@@ -66,12 +67,12 @@ public class Event {
         this.date = date;
     }
 
-    public String getGenre() {
-        return genre;
+    public String getDescription() {
+        return description;
     }
 
-    public void setGenre(String genre) {
-        this.genre = genre;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public LocalTime getEinlass() {
@@ -107,7 +108,7 @@ public class Event {
                 Objects.equals(title, event.title) &&
                 Objects.equals(location, event.location) &&
                 Objects.equals(date, event.date) &&
-                Objects.equals(genre, event.genre) &&
+                Objects.equals(description, event.description) &&
                 Objects.equals(einlass, event.einlass) &&
                 Objects.equals(beginn, event.beginn) &&
                 Objects.equals(price, event.price);
@@ -115,7 +116,7 @@ public class Event {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, location, date, genre, einlass, beginn, price);
+        return Objects.hash(id, title, location, date, description, einlass, beginn, price);
     }
 
     @Override
@@ -125,7 +126,7 @@ public class Event {
                 ", title='" + title + '\'' +
                 ", location='" + location + '\'' +
                 ", date=" + date +
-                ", genre='" + genre + '\'' +
+                ", description='" + description + '\'' +
                 ", einlass=" + einlass +
                 ", beginn=" + beginn +
                 ", price=" + price +
