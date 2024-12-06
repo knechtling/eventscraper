@@ -1,16 +1,45 @@
+<!-- src/main/resources/templates/welcome.html -->
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
-    <title>Event List</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<h1>Upcoming Events</h1>
-<ul>
-    <li th:each="event : ${events}">
-        <strong th:text="${event.title}"></strong><br>
-        <span th:text="${event.date}"></span><br>
-        <span th:text="${event.location}"></span><br><br>
-    </li>
-</ul>
+    <div class="container">
+        <h1>Events</h1>
+        <div class="search-box">
+            <form action="/" method="get">
+                <input type="text" name="search" placeholder="Search events...">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Date</th>
+                    <th>Genre</th>
+                    <th>Einlass</th>
+                    <th>Beginn</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="event : ${events}">
+                    <td th:text="${event.title}"></td>
+                    <td th:text="${event.location}"></td>
+                    <td th:text="${event.date}"></td>
+                    <td th:text="${event.genre}"></td>
+                    <td th:text="${event.einlass}"></td>
+                    <td th:text="${event.beginn}"></td>
+                    <td th:text="${event.price}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
