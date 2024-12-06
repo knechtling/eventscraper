@@ -1,15 +1,16 @@
 package com.hansablock.eventscraper;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Objects;
 
 @Entity
 public class Event {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
@@ -18,24 +19,20 @@ public class Event {
     private String genre;
     private LocalTime einlass;
     private LocalTime beginn;
-    private float price;
+    private BigDecimal price;
 
-    public Event(long id, String title, String location, LocalDate date, String genre, LocalTime einlass, LocalTime beginn, float price) {
+    public Event() {
+    }
+
+    public Event(Long id, String title, String location, LocalDate date, String genre, LocalTime einlass, LocalTime beginn, BigDecimal price) {
         this.id = id;
         this.title = title;
         this.location = location;
-    }
-
-    public Event() {
-
-    }
-
-    public String getGenre() {
-        return genre;
-    }
-
-    public void setGenre(String genre) {
+        this.date = date;
         this.genre = genre;
+        this.einlass = einlass;
+        this.beginn = beginn;
+        this.price = price;
     }
 
     public Long getId() {
@@ -70,6 +67,14 @@ public class Event {
         this.date = date;
     }
 
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
     public LocalTime getEinlass() {
         return einlass;
     }
@@ -86,12 +91,45 @@ public class Event {
         this.beginn = beginn;
     }
 
-    public float getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(float price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
-}
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Event event = (Event) o;
+        return Objects.equals(id, event.id) &&
+                Objects.equals(title, event.title) &&
+                Objects.equals(location, event.location) &&
+                Objects.equals(date, event.date) &&
+                Objects.equals(genre, event.genre) &&
+                Objects.equals(einlass, event.einlass) &&
+                Objects.equals(beginn, event.beginn) &&
+                Objects.equals(price, event.price);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title, location, date, genre, einlass, beginn, price);
+    }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", location='" + location + '\'' +
+                ", date=" + date +
+                ", genre='" + genre + '\'' +
+                ", einlass=" + einlass +
+                ", beginn=" + beginn +
+                ", price=" + price +
+                '}';
+    }
+}
