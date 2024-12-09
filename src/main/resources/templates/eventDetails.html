@@ -62,7 +62,7 @@
     <div class="event-details">
         <h1 th:text="${event.title}">Event Title</h1>
         <p><strong>Location:</strong> <span th:text="${event.location}">Event Location</span></p>
-        <p><strong>Date:</strong> <span th:text="${event.date}">Event Date</span></p>
+        <p><strong>Date:</strong> <span th:text="${event.formattedDate}">Event Date</span></p>
         <p><strong>Einlass:</strong> <span th:text="${event.einlass}">Einlass Time</span></p>
         <p><strong>Beginn:</strong> <span th:text="${event.beginn}">Beginn Time</span></p>
         <p><strong>Price:</strong> <span th:text="${event.price}">Event Price</span></p>

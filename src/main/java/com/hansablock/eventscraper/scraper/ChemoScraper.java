@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +29,18 @@ public class ChemoScraper implements Scraper {
                     ":not(:contains(abgesagt))" +
                     ":not(:contains(verlegt))");
 
+            int currentYear = LocalDate.now().getYear();
+            Month currentMonth = null;
+
             for (Element event : eventList) {
                 // Parse date
                 String dateText = event.selectFirst(".jet-listing-dynamic-field__content").text();
                 dateText = dateText.substring(dateText.indexOf(' ') + 1); // Remove day of week
-                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yy");
-                LocalDate date = LocalDate.parse(dateText, dateFormatter);
+                String[] dateParts = dateText.split("\\.");
+                int day = Integer.parseInt(dateParts[0]);
+                int month = Integer.parseInt(dateParts[1]);
+                currentMonth = Month.of(month);
+                LocalDate date = LocalDate.of(currentYear, currentMonth, day);
 
                 // Parse entry and start times
                 LocalTime entryTime = parseTime(event, ".elementor-element-6c7315b .elementor-widget-container", "Einlass:");
