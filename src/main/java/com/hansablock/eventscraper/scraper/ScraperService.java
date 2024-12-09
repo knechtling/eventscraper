@@ -1,8 +1,10 @@
+// ScraperService.java
 package com.hansablock.eventscraper.scraper;
 
 import com.hansablock.eventscraper.Event;
 import com.hansablock.eventscraper.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +21,15 @@ public class ScraperService {
         this.scrapers = scrapers;
     }
 
+    @Scheduled(fixedRate = 3600000) // Run every hour
     public void scrapeAndSaveEvents() {
         for (Scraper scraper : scrapers) {
             List<Event> events = scraper.scrapeEvents();
-            eventRepository.saveAll(events);
+            for (Event event : events) {
+                if (!eventRepository.existsByDescription(event.getDescription())) {
+                    eventRepository.save(event);
+                }
+            }
         }
     }
 }
