@@ -29,7 +29,6 @@ public class ChemoScraper implements Scraper {
                     ":not(:contains(abgesagt))" +
                     ":not(:contains(verlegt))");
 
-            int currentYear = LocalDate.now().getYear();
             Month currentMonth = null;
 
             for (Element event : eventList) {
@@ -39,8 +38,8 @@ public class ChemoScraper implements Scraper {
                 String[] dateParts = dateText.split("\\.");
                 int day = Integer.parseInt(dateParts[0]);
                 int month = Integer.parseInt(dateParts[1]);
-                currentMonth = Month.of(month);
-                LocalDate date = LocalDate.of(currentYear, currentMonth, day);
+                int year = Integer.parseInt(dateParts[2]) + 2000; // Assuming the year is in 'yy' format
+                LocalDate date = LocalDate.of(year, month, day);
 
                 // Parse entry and start times
                 LocalTime entryTime = parseTime(event, ".elementor-element-6c7315b .elementor-widget-container", "Einlass:");
