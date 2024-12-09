@@ -29,79 +29,78 @@ public class ScheunenScraper implements Scraper {
             Elements eventList = doc.select("div.va"); // Each "va" represents an event
 
             LocalDate currentEventDate = null; // To hold the last valid date
-            Month currentMonth = null;
-            int currentYear = LocalDate.now().getYear();
+            int currentYear = LocalDate.now().getYear(); // Default year
 
-            // Find the month and year
-            Element monthElement = doc.selectFirst("h3.head.monat");
-            if (monthElement != null) {
-                String[] monthYearText = monthElement.text().split(" ");
-                currentMonth = getMonthFromGerman(monthYearText[0]);
-                if (monthYearText.length > 1 && monthYearText[1].matches("\\d{4}")) {
-                    currentYear = Integer.parseInt(monthYearText[1]);
-                }
-            }
-
-            for (Element eventElement : eventList) {
-                // Parse date for main events
-                if (!eventElement.hasClass("follow_up")) {
-                    String dateText = eventElement.select("span.monat_tag").text().trim();
-                    String[] dateParts = dateText.split(" ");
-                    if (dateParts.length == 2) {
-                        int day = Integer.parseInt(dateParts[0].replace(".", ""));
-                        currentEventDate = LocalDate.of(currentYear, currentMonth, day);
+            // Track the current month and year from headers
+            for (Element headerOrEvent : doc.select("h3.head.monat, div.va")) {
+                if (headerOrEvent.tagName().equals("h3")) {
+                    // Update currentYear and month from header
+                    String[] monthYearText = headerOrEvent.text().split(" ");
+                    if (monthYearText.length == 2 && monthYearText[1].matches("\\d{4}")) {
+                        currentYear = Integer.parseInt(monthYearText[1]);
                     }
-                }
-
-                // Parse title
-                String title = eventElement.select("h2.va_titel").text();
-
-                // Parse Beginn time
-                String beginnText = eventElement.select("span.va_uhrzeit").text();
-                String beginn = beginnText.replace(" Uhr", "");
-
-                // Parse description
-                String description = eventElement.select("a.term.reihe_link").text() + "<br>" + eventElement.select("a.va_location").text();
-
-                // Follow link for misc and thumbnail
-                String misc = "";
-                String thumbnail = "";
-                Element titleElement = eventElement.selectFirst("div.titel > a");
-                if (titleElement != null) {
-                    String detailPageUrl = titleElement.attr("href");
-                    Document detailDoc = Jsoup.connect(detailPageUrl).get();
-
-                    // Parse misc from detail page
-                    Element miscElement = detailDoc.selectFirst("span.va_txt p");
-                    if (miscElement != null) {
-                        misc = miscElement.html();
+                } else if (headerOrEvent.hasClass("va")) {
+                    // Parse date for main events
+                    if (!headerOrEvent.hasClass("follow_up")) {
+                        String dateText = headerOrEvent.select("span.monat_tag").text().trim();
+                        String[] dateParts = dateText.split(" ");
+                        if (dateParts.length == 2) {
+                            int day = Integer.parseInt(dateParts[0].replace(".", ""));
+                            Month month = getMonthFromGerman(dateParts[1]);
+                            currentEventDate = LocalDate.of(currentYear, month, day);
+                        }
                     }
 
-                    // Parse thumbnail from detail page
-                    Element thumbnailElement = detailDoc.selectFirst("figure a[rel='galerie[]'] img");
-                    if (thumbnailElement != null) {
-                        thumbnail = thumbnailElement.attr("src");
+                    // Parse title
+                    String title = headerOrEvent.select("h2.va_titel").text();
+
+                    // Parse Beginn time
+                    String beginnText = headerOrEvent.select("span.va_uhrzeit").text();
+                    String beginn = beginnText.replace(" Uhr", "");
+
+                    // Parse description
+                    String description = headerOrEvent.select("a.term.reihe_link").text() + "<br>" + headerOrEvent.select("a.va_location").text();
+
+                    // Follow link for misc and thumbnail
+                    String misc = "";
+                    String thumbnail = "";
+                    Element titleElement = headerOrEvent.selectFirst("div.titel > a");
+                    if (titleElement != null) {
+                        String detailPageUrl = titleElement.attr("href");
+                        Document detailDoc = Jsoup.connect(detailPageUrl).get();
+
+                        // Parse misc from detail page
+                        Element miscElement = detailDoc.selectFirst("span.va_txt p");
+                        if (miscElement != null) {
+                            misc = miscElement.html();
+                        }
+
+                        // Parse thumbnail from detail page
+                        Element thumbnailElement = detailDoc.selectFirst("figure a[rel='galerie[]'] img");
+                        if (thumbnailElement != null) {
+                            thumbnail = thumbnailElement.attr("src");
+                        }
                     }
+
+                    // Set fixed location
+                    String location = "Scheune Dresden";
+
+                    // Create the event
+                    Event newEvent = new Event(
+                            null,
+                            title,
+                            location,
+                            currentEventDate,
+                            description,
+                            null, // Entry time not provided
+                            LocalTime.parse(beginn),
+                            null, // Price not provided
+                            misc,
+                            thumbnail
+                    );
+
+                    events.add(newEvent);
                 }
-
-                // Set fixed location
-                String location = "Scheune Dresden";
-
-                // Create the event
-                Event newEvent = new Event(
-                        null,
-                        title,
-                        location,
-                        currentEventDate,
-                        description,
-                        null, // Entry time not provided
-                        LocalTime.parse(beginn),
-                        null, // Price not provided
-                        misc,
-                        thumbnail
-                );
-
-                events.add(newEvent);
             }
         } catch (IOException e) {
             e.printStackTrace();
