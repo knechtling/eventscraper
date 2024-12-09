@@ -91,3 +91,8 @@ h1 {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
 }
+
+.event-card.highlight {
+    border: 2px solid #007BFF;
+    background-color: #f0f8ff;
+}

@@ -1,35 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events</title>
+    <title>Veranstaltungen</title>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
+    <style>
+        .highlight {
+            background-color: #ffeb3b;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
-    <h1>Events</h1>
+    <h1>Veranstaltungen</h1>
     <div class="search-box">
         <form action="/" method="get">
-            <input type="text" name="search" placeholder="Search events..." th:value="${search}">
-            <button type="submit">Search</button>
+            <input type="text" name="search" placeholder="Veranstaltungen suchen..." th:value="${search}">
+            <button type="submit">Suchen</button>
         </form>
     </div>
     <div class="filter-box">
-        <input type="text" id="dateRangePicker" placeholder="Select date range">
+        <input type="text" id="dateRangePicker" placeholder="Zeitraum auswählen">
     </div>
     <div class="events-grid" id="eventsGrid">
-        <div class="event-card" th:each="event : ${events}">
-            <div class="event-thumbnail" th:style="'background-image: url(' + ${event.thumbnail} + ')'"></div>
+        <div class="event-card" th:each="event : ${events}" data-date="[[${event.date}]]">
+            <div class="event-thumbnail" th:style="'background-image: url(' + ${event.thumbnail} + ')'">
+            </div>
             <div class="event-details">
                 <h3 th:text="${event.title}"></h3>
-                <p><strong>Location:</strong> <span th:text="${event.location}"></span></p>
-                <p><strong>Date:</strong> <span th:text="${event.getFormattedDate()}"></span></p>
-                <p><strong>Description:</strong> <span th:utext="${event.description}"></span></p>
+                <p><strong>Ort:</strong> <span th:text="${event.location}"></span></p>
+                <p><strong>Datum:</strong> <span th:text="${event.getFormattedDate()}"></span></p>
+                <p><strong>Beschreibung:</strong> <span th:utext="${event.description}"></span></p>
                 <p><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
                 <p><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
-                <p><strong>Price:</strong> <span th:text="${event.price}"></span></p>
+                <p><strong>Preis:</strong> <span th:text="${event.price}"></span></p>
             </div>
             <div class="mehr-anzeigen">
                 <a th:href="@{/event/details/{id}(id=${event.id})}">Mehr anzeigen</a>
@@ -39,37 +46,32 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const showAllEventsButton = document.getElementById('showAllEvents');
-        const eventsGrid = document.getElementById('eventsGrid');
+    document.addEventListener('DOMContentLoaded', function () {
         const dateRangePicker = flatpickr("#dateRangePicker", {
             mode: "range",
+            dateFormat: "d.m.Y",
+            locale: "de",
             onChange: filterEvents
         });
 
         function filterEvents(selectedDates) {
-            const cards = eventsGrid.querySelectorAll('.event-card');
-            const startDate = selectedDates[0]
-            const endDate = selectedDates[1]
+            const [startDate, endDate] = selectedDates;
 
-            cards.forEach(card => {
+            document.querySelectorAll('.event-card').forEach(card => {
                 const dateText = card.querySelector('.event-details p:nth-child(3) span').textContent;
-                const eventDate = new Date(dateText);
-                if (eventDate >= startDate && eventDate <= endDate) {
+                const [day, month, year] = dateText.split('.').map(part => parseInt(part));
+                const eventDate = new Date(year, month - 1, day);
+
+                if (
+                    (!startDate || eventDate >= startDate) &&
+                    (!endDate || eventDate <= endDate)
+                ) {
                     card.style.display = '';
                 } else {
                     card.style.display = 'none';
                 }
             });
         }
-
-        showAllEventsButton.addEventListener('click', function() {
-            dateRangePicker.clear();
-            const cards = eventsGrid.querySelectorAll('.event-card');
-            cards.forEach(card => {
-                card.style.display = '';
-            });
-        });
     });
 </script>
 </body>

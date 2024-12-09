@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EventService {
@@ -16,8 +15,8 @@ public class EventService {
         this.eventRepository = eventRepository;
     }
 
-    public List<Event> getEvents() {
-        return eventRepository.findAll();
+    public List<Event> getSortedEvents() {
+        return eventRepository.findAllByOrderByDateAsc();
     }
 
     public List<Event> searchEventsByTitle(String title) {

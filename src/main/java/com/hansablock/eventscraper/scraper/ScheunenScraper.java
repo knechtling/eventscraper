@@ -5,23 +5,27 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class ScheunenScraper implements Scraper {
 
+    private static final Logger logger = LoggerFactory.getLogger(ScheunenScraper.class);
     private static final String BASE_URL = "https://scheune.org";
 
     @Override
     public List<Event> scrapeEvents() {
+        logger.info("Scraping events from Scheune");
+
         List<Event> events = new ArrayList<>();
 
         try {
@@ -75,13 +79,15 @@ public class ScheunenScraper implements Scraper {
                             misc = miscElement.html();
                         }
 
+                        // Append detailPageUrl to misc
+                        misc += "<br><a href=\"" + detailPageUrl + "\">More details</a>";
+
                         // Parse thumbnail from detail page
                         Element thumbnailElement = detailDoc.selectFirst("figure a[rel='galerie[]'] img");
                         if (thumbnailElement != null) {
                             thumbnail = thumbnailElement.attr("src");
                         }
                     }
-
                     // Set fixed location
                     String location = "Scheune Dresden";
 
@@ -103,7 +109,7 @@ public class ScheunenScraper implements Scraper {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error scraping events from Scheune", e);
         }
 
         return events;
