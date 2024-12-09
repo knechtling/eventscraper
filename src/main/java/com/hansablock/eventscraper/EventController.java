@@ -1,7 +1,6 @@
 package com.hansablock.eventscraper;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,7 +29,7 @@ public class EventController {
         if (search != null && !search.isEmpty()) {
             events = eventService.searchEventsByTitle(search);
         } else {
-            events = eventService.getEvents();
+            events = eventService.getSortedEvents();
         }
         model.addAttribute("events", events);
         model.addAttribute("search", search);
