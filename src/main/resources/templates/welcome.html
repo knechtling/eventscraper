@@ -25,7 +25,7 @@
             <div class="event-details">
                 <h3 th:text="${event.title}"></h3>
                 <p><strong>Location:</strong> <span th:text="${event.location}"></span></p>
-                <p><strong>Date:</strong> <span th:text="${event.date}"></span></p>
+                <p><strong>Date:</strong> <span th:text="${event.formattedDate}"></span></p>
                 <p><strong>Description:</strong> <span th:utext="${event.description}"></span></p>
                 <p><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
                 <p><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
