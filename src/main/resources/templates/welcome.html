@@ -1,4 +1,3 @@
-<!-- src/main/resources/templates/welcome.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,40 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Events</h1>
-        <div class="search-box">
-            <form action="/" method="get">
-                <input type="text" name="search" placeholder="Search events...">
-                <button type="submit">Search</button>
-            </form>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Location</th>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th>Einlass</th>
-                    <th>Beginn</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="event : ${events}">
-                    <td th:text="${event.title}"></td>
-                    <td th:text="${event.location}"></td>
-                    <td th:text="${event.date}"></td>
-                    <td th:utext="${event.description}"></td>
-                    <td th:text="${event.einlass}"></td>
-                    <td th:text="${event.beginn}"></td>
-                    <td th:text="${event.price}"></td>
-                </tr>
-            </tbody>
-        </table>
+<div class="container">
+    <h1>Events</h1>
+    <div class="search-box">
+        <form action="/" method="get">
+            <input type="text" name="search" placeholder="Search events..." th:value="${search}">
+            <button type="submit">Search</button>
+        </form>
     </div>
+    <div class="filter-box">
+        <input type="text" id="dateRangePicker" placeholder="Select date range">
+    </div>
+    <div class="events-grid" id="eventsGrid">
+        <div class="event-card" th:each="event : ${events}">
+            <div class="event-thumbnail" th:style="'background-image: url(' + ${event.thumbnail} + ')'"></div>
+            <div class="event-details">
+                <h3 th:text="${event.title}"></h3>
+                <p><strong>Location:</strong> <span th:text="${event.location}"></span></p>
+                <p><strong>Date:</strong> <span th:text="${event.date}"></span></p>
+                <p><strong>Description:</strong> <span th:utext="${event.description}"></span></p>
+                <p><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
+                <p><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
+                <p><strong>Price:</strong> <span th:text="${event.price}"></span></p>
+            </div>
+            <div class="mehr-anzeigen">
+                <a th:href="@{/event/details/{id}(id=${event.id})}">Mehr anzeigen</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const showAllEventsButton = document.getElementById('showAllEvents');
+        const eventsGrid = document.getElementById('eventsGrid');
+        const dateRangePicker = flatpickr("#dateRangePicker", {
+            mode: "range",
+            onChange: filterEvents
+        });
+
+        function filterEvents(selectedDates) {
+            const cards = eventsGrid.querySelectorAll('.event-card');
+            const startDate = selectedDates[0]
+            const endDate = selectedDates[1]
+
+            cards.forEach(card => {
+                const dateText = card.querySelector('.event-details p:nth-child(3) span').textContent;
+                const eventDate = new Date(dateText);
+                if (eventDate >= startDate && eventDate <= endDate) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        showAllEventsButton.addEventListener('click', function() {
+            dateRangePicker.clear();
+            const cards = eventsGrid.querySelectorAll('.event-card');
+            cards.forEach(card => {
+                card.style.display = '';
+            });
+        });
+    });
+</script>
 </body>
 </html>

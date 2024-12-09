@@ -20,11 +20,23 @@ public class Event {
     private LocalTime einlass;
     private LocalTime beginn;
     private String price;
+    @Column(length = 3000)
+    private String misc;
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+    private String thumbnail;
 
     public Event() {
     }
 
-    public Event(Long id, String title, String location, LocalDate date, String description, LocalTime einlass, LocalTime beginn, String price) {
+    public Event(Long id, String title, String location, LocalDate date, String description, LocalTime einlass, LocalTime beginn, String price, String misc, String thumbnail) {
         this.id = id;
         this.title = title;
         this.location = location;
@@ -33,7 +45,10 @@ public class Event {
         this.einlass = einlass;
         this.beginn = beginn;
         this.price = price;
+        this.misc = misc;
+        this.thumbnail = thumbnail;
     }
+
 
     public Long getId() {
         return id;
@@ -97,6 +112,14 @@ public class Event {
 
     public void setPrice(String price) {
         this.price = price;
+    }
+
+    public String getMisc() {
+        return misc;
+    }
+
+    public void setMisc(String misc) {
+        this.misc = misc;
     }
 
     @Override

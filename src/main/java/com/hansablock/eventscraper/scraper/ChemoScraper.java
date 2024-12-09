@@ -8,14 +8,11 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
@@ -60,10 +57,17 @@ public class ChemoScraper implements Scraper {
                     description.append(descriptionElement.text()).append("<br />");
                 }
 
+                // Parse misc
+                String misc = event.select(".elementor-widget-jet-listing-dynamic-field > .elementor-widget-container > .display-inline p").text();
+
+                // Parse thumbnail
+                String thumbnail = event.select(".size-medium_large").attr("src");
+                System.out.println("Thumbnail URL: " + thumbnail);
 
                 String location = "Chemiefabrik";
-                Event newEvent = new Event(null, title, location, date, description.toString().trim(), entryTime, startTime, priceText);
-                events.add(newEvent);            }
+                Event newEvent = new Event(null, title, location, date, description.toString().trim(), entryTime, startTime, priceText, misc, thumbnail);
+                events.add(newEvent);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

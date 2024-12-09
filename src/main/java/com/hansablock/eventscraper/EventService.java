@@ -21,8 +21,6 @@ public class EventService {
     }
 
     public List<Event> searchEventsByTitle(String title) {
-        return eventRepository.findAll().stream()
-                .filter(event -> event.getTitle().toLowerCase().contains(title.toLowerCase()))
-                .collect(Collectors.toList());
+        return eventRepository.findByTitleContainingIgnoreCase(title);
     }
 }
