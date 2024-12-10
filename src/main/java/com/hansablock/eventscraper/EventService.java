@@ -19,7 +19,7 @@ public class EventService {
         return eventRepository.findAllByOrderByDateAsc();
     }
 
-    public List<Event> searchEventsByTitle(String title) {
-        return eventRepository.findByTitleContainingIgnoreCase(title);
+    public List<Event> searchEventsByTitleOrDescription(String searchTerm) {
+        return eventRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(searchTerm, searchTerm);
     }
 }

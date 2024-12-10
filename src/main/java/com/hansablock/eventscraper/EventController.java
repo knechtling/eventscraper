@@ -27,7 +27,7 @@ public class EventController {
     public String getEvents(@RequestParam(value = "search", required = false) String search, Model model) {
         List<Event> events;
         if (search != null && !search.isEmpty()) {
-            events = eventService.searchEventsByTitle(search);
+            events = eventService.searchEventsByTitleOrDescription(search);
         } else {
             events = eventService.getSortedEvents();
         }
