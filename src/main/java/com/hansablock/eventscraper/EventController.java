@@ -33,6 +33,7 @@ public class EventController {
         }
         model.addAttribute("events", events);
         model.addAttribute("search", search);
+        model.addAttribute("locations", eventService.getUniqueLocations());
         return "welcome";
     }
 @GetMapping("/event/details/{id}")
