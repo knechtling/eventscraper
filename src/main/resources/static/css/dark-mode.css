@@ -1,0 +1,48 @@
+/* Dark Mode */
+.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+/* Container Dark Mode */
+.dark-mode .container {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+}
+
+/* Dark Mode Headings */
+.dark-mode h1 {
+    color: #e0e0e0;
+}
+
+.dark-mode .event-details h3 {
+    color: #fff;
+}
+
+/* Dark Mode Inputs and Selects */
+.dark-mode .search-box input,
+.dark-mode .filter-box input,
+.dark-mode .filter-box select {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #555;
+    box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+/* Dark Mode Event Card */
+.dark-mode .event-card {
+    background-color: #2a2a2a;
+    border-color: #444;
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+}
+
+/* Dark Mode Thumbnail */
+.dark-mode .event-thumbnail {
+    filter: brightness(0.8);
+}
+
+/* Dark Mode Paragraphs */
+.dark-mode .event-details p {
+    color: #ccc;
+}

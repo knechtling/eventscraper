@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veranstaltungen</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dark-mode.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
-    <style>
-        .highlight {
-            background-color: #ffeb3b;
-            font-weight: bold;
-        }
-    </style>
 </head>
 <body>
 <div class="container">
     <h1>Veranstaltungen</h1>
+    <div th:replace="fragments/darkmode-button :: darkmodeButton"></div>
     <div class="search-box">
         <form action="/" method="get">
             <input type="text" name="search" placeholder="Veranstaltungen suchen..." th:value="${search}">
@@ -24,11 +20,13 @@
     </div>
     <div class="filter-box">
         <input type="text" id="dateRangePicker" placeholder="Zeitraum auswählen">
+        <select id="locationFilter">
+            <option th:each="location : ${locations}" th:value="${location}" th:text="${location}"></option>
+        </select>
     </div>
     <div class="events-grid" id="eventsGrid">
         <div class="event-card" th:each="event : ${events}" data-date="[[${event.date}]]">
-            <div class="event-thumbnail" th:style="'background-image: url(' + ${event.thumbnail} + ')'">
-            </div>
+            <div class="event-thumbnail" th:style="'background-image: url(' + ${event.thumbnail} + ')'"></div>
             <div class="event-details">
                 <h3 th:text="${event.title}"></h3>
                 <p><strong>Ort:</strong> <span th:text="${event.location}"></span></p>
@@ -47,6 +45,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+
         const dateRangePicker = flatpickr("#dateRangePicker", {
             mode: "range",
             dateFormat: "d.m.Y",
@@ -54,18 +53,25 @@
             onChange: filterEvents
         });
 
-        function filterEvents(selectedDates) {
-            const [startDate, endDate] = selectedDates;
+        const locationFilter = document.getElementById('locationFilter');
+        locationFilter.addEventListener('change', filterEvents);
+
+        function filterEvents() {
+            const selectedLocation = locationFilter.value.toLowerCase();
+            const [startDate, endDate] = dateRangePicker.selectedDates;
 
             document.querySelectorAll('.event-card').forEach(card => {
+                const locationText = card.querySelector('.event-details p:nth-child(2) span').textContent.toLowerCase();
                 const dateText = card.querySelector('.event-details p:nth-child(3) span').textContent;
                 const [day, month, year] = dateText.split('.').map(part => parseInt(part));
                 const eventDate = new Date(year, month - 1, day);
 
-                if (
+                const matchesLocation = !selectedLocation || locationText === selectedLocation;
+                const matchesDate =
                     (!startDate || eventDate >= startDate) &&
-                    (!endDate || eventDate <= endDate)
-                ) {
+                    (!endDate || eventDate <= endDate);
+
+                if (matchesLocation && matchesDate) {
                     card.style.display = '';
                 } else {
                     card.style.display = 'none';
