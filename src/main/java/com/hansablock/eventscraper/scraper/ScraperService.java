@@ -1,4 +1,3 @@
-// ScraperService.java
 package com.hansablock.eventscraper.scraper;
 
 import com.hansablock.eventscraper.Event;
@@ -26,7 +25,7 @@ public class ScraperService {
         for (Scraper scraper : scrapers) {
             List<Event> events = scraper.scrapeEvents();
             for (Event event : events) {
-                if (!eventRepository.existsByDescription(event.getDescription())) {
+                if (!eventRepository.existsByMisc(event.getMisc())) {
                     eventRepository.save(event);
                 }
             }

@@ -21,7 +21,7 @@ public class Event {
     private LocalTime einlass;
     private LocalTime beginn;
     private String price;
-    @Column(length = 3000)
+    @Column(length = 4000)
     private String misc;
 
     public String getThumbnail() {
@@ -51,8 +51,11 @@ public class Event {
     }
 
     public String getFormattedDate() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        return this.date.format(formatter);
+        if (this.date != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            return this.date.format(formatter);
+        }
+        return "";
     }
 
     public Long getId() {
