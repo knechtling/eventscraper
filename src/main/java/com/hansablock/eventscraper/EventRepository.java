@@ -6,5 +6,6 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String title, String description);
     List<Event> findAllByOrderByDateAsc();
+    boolean existsByMisc(String misc);
     boolean existsByDescription(String description);
 }

@@ -29,7 +29,6 @@ public class HanseScraper implements Scraper {
                 // Parse date
                 String dateText = eventElement.select("h1 > span:nth-of-type(1)").text().trim();
                 LocalDate date = parseDate(dateText);
-                System.out.println(date);
 
                 // Parse start time
                 String timeText = eventElement.select("h1 > span:nth-of-type(2)").text().trim();
@@ -37,11 +36,9 @@ public class HanseScraper implements Scraper {
 
                 // Parse title
                 String title = eventElement.select("h2").text().trim();
-                System.out.println(title);
 
                 // Parse misc
                 String misc = eventElement.select("div:not(.show_gallery):not(:has(img))").text().trim();
-                System.out.println(misc);
 
                 // Parse thumbnail
                 String thumbnail = eventElement.select("div.show_gallery a > img").attr("src").trim();
