@@ -24,9 +24,12 @@
             <option th:each="location : ${locations}" th:value="${location}" th:text="${location}"></option>
         </select>
     </div>
-    <div class="events-grid" id="eventsGrid">
+    <div class="events-grid" id="events">
         <div class="event-card" th:each="event : ${events}" data-date="[[${event.date}]]">
-            <div class="event-thumbnail" th:style="'background-image: url(' + ${event.thumbnail} + ')'"></div>
+            <div class="event-thumbnail"
+                 th:attr="data-src=${event.thumbnail}"
+                 th:style="'background-image: url(/images/placeholder.webp)'">
+            </div>
             <div class="event-details">
                 <h3 th:text="${event.title}"></h3>
                 <p><strong>Ort:</strong> <span th:text="${event.location}"></span></p>
@@ -42,10 +45,10 @@
         </div>
     </div>
 </div>
+<script src="/js/lazyLoadImages.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-
         const dateRangePicker = flatpickr("#dateRangePicker", {
             mode: "range",
             dateFormat: "d.m.Y",
