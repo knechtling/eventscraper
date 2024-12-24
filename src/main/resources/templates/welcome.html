@@ -21,6 +21,7 @@
     <div class="filter-box">
         <input type="text" id="dateRangePicker" placeholder="Zeitraum auswählen">
         <select id="locationFilter">
+            <option value="">Alle Orte</option>
             <option th:each="location : ${locations}" th:value="${location}" th:text="${location}"></option>
         </select>
     </div>
@@ -74,7 +75,7 @@
                     (!startDate || eventDate >= startDate) &&
                     (!endDate || eventDate <= endDate);
 
-                if (matchesLocation && matchesDate) {
+                if ((!selectedLocation && !startDate && !endDate) || (matchesLocation && matchesDate)) {
                     card.style.display = '';
                 } else {
                     card.style.display = 'none';

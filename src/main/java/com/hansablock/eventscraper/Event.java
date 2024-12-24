@@ -16,7 +16,7 @@ public class Event {
     private String title;
     private String location;
     private LocalDate date;
-    @Column(length = 1000)
+    @Column(length = 2000)
     private String description;
     private LocalTime einlass;
     private LocalTime beginn;
@@ -37,7 +37,8 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String title, String location, LocalDate date, String description, LocalTime einlass, LocalTime beginn, String price, String misc, String thumbnail) {
+    public Event(Long id, String title, String location, LocalDate date, String description, LocalTime einlass,
+            LocalTime beginn, String price, String misc, String thumbnail) {
         this.id = id;
         this.title = title;
         this.location = location;
@@ -132,8 +133,10 @@ public class Event {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Event event = (Event) o;
         return Objects.equals(id, event.id) &&
                 Objects.equals(title, event.title) &&
