@@ -72,7 +72,7 @@ public class HanseScraper implements Scraper {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             return LocalDate.parse(dateText, formatter);
         } catch (Exception e) {
-            System.err.println("Failed to parse date: " + dateText);
+            System.err.println("[Hanse3] Failed to parse date: " + dateText);
             e.printStackTrace();
             return null;
         }
@@ -89,7 +89,7 @@ public class HanseScraper implements Scraper {
             String timeCleaned = timeText.replace(" Uhr", "").trim();
             return LocalTime.parse(timeCleaned, DateTimeFormatter.ofPattern("HH:mm"));
         } catch (Exception e) {
-            System.err.println("Failed to parse time: " + timeText);
+            System.err.println("[Hanse3] Failed to parse time: " + timeText);
             e.printStackTrace();
             return null;
         }
