@@ -25,7 +25,9 @@ public class ScraperService {
         for (Scraper scraper : scrapers) {
             List<Event> events = scraper.scrapeEvents();
             for (Event event : events) {
-                eventRepository.save(event);
+                if (!eventRepository.existsByMisc(event.getMisc())) {
+                    eventRepository.save(event);
+                }
             }
         }
     }
