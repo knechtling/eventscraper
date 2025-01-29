@@ -39,6 +39,9 @@ public class HanseScraper implements Scraper {
 
                 // Parse misc
                 String misc = eventElement.select("div:not(.show_gallery):not(:has(img))").text().trim();
+                if (misc.length() > 1000) {
+                    misc = misc.substring(0, 997) + "...";
+                }
 
                 // Parse thumbnail
                 String thumbnail = eventElement.select("div.show_gallery a > img").attr("src").trim();
@@ -69,8 +72,13 @@ public class HanseScraper implements Scraper {
      */
     private LocalDate parseDate(String dateText) {
         try {
+            // Split in case multiple dates are present
+            String[] dateParts = dateText.split(" ");
+            String firstDate = dateParts[0]; // Take only the first date
+
+            // Determine the correct date format
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            return LocalDate.parse(dateText, formatter);
+            return LocalDate.parse(firstDate, formatter);
         } catch (Exception e) {
             System.err.println("[Hanse3] Failed to parse date: " + dateText);
             e.printStackTrace();
@@ -86,8 +94,11 @@ public class HanseScraper implements Scraper {
      */
     private LocalTime parseTime(String timeText) {
         try {
-            String timeCleaned = timeText.replace(" Uhr", "").trim();
-            return LocalTime.parse(timeCleaned, DateTimeFormatter.ofPattern("HH:mm"));
+            // Split in case multiple times are present
+            String[] timeParts = timeText.replace(" Uhr", "").trim().split(" ");
+            String firstTime = timeParts[0]; // Take only the first time
+
+            return LocalTime.parse(firstTime, DateTimeFormatter.ofPattern("HH:mm"));
         } catch (Exception e) {
             System.err.println("[Hanse3] Failed to parse time: " + timeText);
             e.printStackTrace();

@@ -24,6 +24,17 @@ public class Event {
     @Column(length = 4000)
     private String misc;
 
+    public String getEventHash() {
+        return eventHash;
+    }
+
+    public void setEventHash(String eventHash) {
+        this.eventHash = eventHash;
+    }
+
+    @Column(unique = true, nullable = false)
+    private String eventHash;
+
     public String getThumbnail() {
         return thumbnail;
     }
