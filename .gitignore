@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Archives and large binaries
+*.tar
+*.zip
+*.7z
+*.gz
+*.tgz
+*.bz2
