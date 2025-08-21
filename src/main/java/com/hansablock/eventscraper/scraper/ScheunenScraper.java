@@ -117,6 +117,14 @@ public class ScheunenScraper implements Scraper {
                             misc,
                             thumbnail
                     );
+                    // set source URL if we visited details
+                    if (titleElement != null) {
+                        String detailPageUrl = titleElement.attr("href");
+                        if (detailPageUrl.startsWith("/")) {
+                            detailPageUrl = BASE_URL + detailPageUrl;
+                        }
+                        newEvent.setSourceUrl(detailPageUrl);
+                    }
 
                     events.add(newEvent);
                 }

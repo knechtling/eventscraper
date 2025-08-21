@@ -24,6 +24,17 @@ public class Event {
     @Column(length = 4000)
     private String misc;
 
+    @Column(length = 1000)
+    private String sourceUrl;
+
+    public String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    public void setSourceUrl(String sourceUrl) {
+        this.sourceUrl = sourceUrl;
+    }
+
     public String getEventHash() {
         return eventHash;
     }

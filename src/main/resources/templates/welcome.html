@@ -33,12 +33,12 @@
             </div>
             <div class="event-details">
                 <h3 th:text="${event.title}"></h3>
-                <p><strong>Ort:</strong> <span th:text="${event.location}"></span></p>
-                <p><strong>Datum:</strong> <span th:text="${event.getFormattedDate()}"></span></p>
-                <p><strong>Beschreibung:</strong> <span th:utext="${event.description}"></span></p>
-                <p><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
-                <p><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
-                <p><strong>Preis:</strong> <span th:text="${event.price}"></span></p>
+                <p th:if="${event.location}"><strong>Ort:</strong> <span th:text="${event.location}"></span></p>
+                <p th:if="${event.getFormattedDate()}"><strong>Datum:</strong> <span th:text="${event.getFormattedDate()}"></span></p>
+                <p th:if="${event.description}"><strong>Beschreibung:</strong> <span th:utext="${event.description}"></span></p>
+                <p th:if="${event.einlass}"><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
+                <p th:if="${event.beginn}"><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
+                <p th:if="${event.price}"><strong>Preis:</strong> <span th:text="${event.price}"></span></p>
             </div>
             <div class="mehr-anzeigen">
                 <a th:href="@{/event/details/{id}(id=${event.id})}">Mehr anzeigen</a>

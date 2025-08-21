@@ -47,7 +47,10 @@ public class HanseScraper implements Scraper {
                 }
 
                 // Parse thumbnail
-                String thumbnail = eventElement.select("div.show_gallery a > img").attr("src").trim();
+                String thumbnail = eventElement.select("div.show_gallery a \u003e img").attr("src").trim();
+
+                // Source URL if present on title link
+                String sourceUrl = eventElement.selectFirst("h2 a") != null ? eventElement.selectFirst("h2 a").attr("href") : "";
 
                 // Limit title length to 255 characters
                 if (title.length() > 255) {
@@ -58,6 +61,7 @@ public class HanseScraper implements Scraper {
                 String location = "Hanse3";
 
                 Event newEvent = new Event(null, title, location, date, misc, null, startTime, null, misc, thumbnail);
+                if (sourceUrl != null && !sourceUrl.isBlank()) newEvent.setSourceUrl(sourceUrl);
                 events.add(newEvent);
             }
         } catch (IOException e) {

@@ -53,6 +53,9 @@ public class ChemoScraper implements Scraper {
                 // Parse title
                 String title = event.select(".elementor-element-a0688f1 h4").text();
 
+                // Source URL if present
+                String sourceUrl = event.selectFirst(".elementor-element-a0688f1 a") != null ? event.selectFirst(".elementor-element-a0688f1 a").attr("href") : "";
+
                 // Parse description
                 Elements descriptionElements = event.select("div.jet-listing-dynamic-repeater__item:not(:has(h4)):has(.bandlink)");
                 StringBuilder description = new StringBuilder();
@@ -68,6 +71,7 @@ public class ChemoScraper implements Scraper {
 
                 String location = "Chemiefabrik";
                 Event newEvent = new Event(null, title, location, date, description.toString().trim(), entryTime, startTime, priceText, misc, thumbnail);
+                if (sourceUrl != null && !sourceUrl.isBlank()) newEvent.setSourceUrl(sourceUrl);
                 events.add(newEvent);
             }
         } catch (IOException | RuntimeException e) {
