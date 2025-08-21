@@ -75,6 +75,12 @@
             <artifactId>flyway-core</artifactId>
             <version>10.22.0</version>
         </dependency>
+        <!-- Flyway v10+ requires a database-specific plugin module -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>10.22.0</version>
+        </dependency>
 
     </dependencies>
     <build>
