@@ -126,19 +126,35 @@ public class ScheunenScraper implements Scraper {
                         if (beginnTime == null && mBeg.find()) {
                             try { beginnTime = LocalTime.parse(mBeg.group(1), TIME_FMT); } catch (Exception ignored) {}
                         }
-                        java.util.regex.Matcher mPrice = java.util.regex.Pattern.compile("(?i)(Eintritt\\s*(frei|[0-9.,]+\\s*€))|\\bAK:?\\s*([^,;\n]+)|\\bVVK:?\\s*([^,;\n]+)").matcher(allText);
+
+                        // Price: only parse concise tokens and avoid capturing calendar/sidebar noise
+                        String rightText = detailDoc.select("#cont .col_right").text();
                         java.util.Set<String> priceBits = new java.util.LinkedHashSet<>();
-                        while (mPrice.find()) {
-                            for (int gi = 1; gi <= mPrice.groupCount(); gi++) {
-                                String g = mPrice.group(gi);
-                                if (g != null) {
-                                    String t = g.trim();
-                                    if (!t.isEmpty()) priceBits.add(t);
-                                }
-                            }
+                        // Eintritt frei variants
+                        java.util.regex.Matcher mFree = java.util.regex.Pattern.compile("(?i)eintritt( ist)? frei").matcher(allText);
+                        if (mFree.find()) {
+                            priceBits.add("Eintritt frei");
                         }
-                        if (!priceBits.isEmpty()) {
-                            price = String.join(" | ", priceBits);
+                        // AK: ... and VVK: ... limited tokens (up to 25 chars of typical price chars)
+                        java.util.regex.Matcher mAk = java.util.regex.Pattern.compile("(?i)\\bAK:?\\s*([\\p{L}\\p{N}€.,/\u2013\- ]{1,25})").matcher(rightText);
+                        while (mAk.find()) {
+                            String val = mAk.group(1).trim();
+                            if (!val.isEmpty()) priceBits.add("AK: " + val);
+                        }
+                        java.util.regex.Matcher mVvk = java.util.regex.Pattern.compile("(?i)\\bVVK:?\\s*([\\p{L}\\p{N}€.,/\u2013\- ]{1,25})").matcher(rightText);
+                        while (mVvk.find()) {
+                            String val = mVvk.group(1).trim();
+                            if (!val.isEmpty()) priceBits.add("VVK: " + val);
+                        }
+                        // Clean up accidental lone 'frei'
+                        java.util.List<String> cleaned = new java.util.ArrayList<>();
+                        for (String pbit : priceBits) {
+                            String t = pbit.replaceAll("\\s+", " ").trim();
+                            if (t.equalsIgnoreCase("frei")) continue;
+                            cleaned.add(t);
+                        }
+                        if (!cleaned.isEmpty()) {
+                            price = String.join(" | ", cleaned);
                         }
 
                         // Parse more specific location if present from right column header line
