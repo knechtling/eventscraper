@@ -69,8 +69,20 @@ public class HanseScraper implements Scraper {
 
     private LocalDate parseDate(String dateText) {
         try {
-            String normalized = dateText.replace(',', ' ').trim().split(" ")[0];
-            return LocalDate.parse(normalized, DATE_FMT);
+            if (dateText == null || dateText.isBlank()) return null;
+            // The site sometimes lists multiple dates separated by spaces, and uses either dd.MM.yyyy or dd/MM/yyyy
+            String[] tokens = dateText.replace(',', ' ').trim().split("\\s+");
+            for (String token : tokens) {
+                String t = token.trim();
+                if (t.matches("\\d{2}\\.\\d{2}\\.\\d{4}")) {
+                    return LocalDate.parse(t, DATE_FMT);
+                }
+                if (t.matches("\\d{2}/\\d{2}/\\d{4}")) {
+                    DateTimeFormatter slash = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    return LocalDate.parse(t, slash);
+                }
+            }
+            throw new IllegalArgumentException("No parsable date token in: " + dateText);
         } catch (Exception e) {
             System.err.println("[Hanse3] Failed to parse date: " + dateText);
             e.printStackTrace();

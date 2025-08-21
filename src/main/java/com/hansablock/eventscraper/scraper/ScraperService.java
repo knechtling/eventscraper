@@ -27,13 +27,23 @@ public class ScraperService {
     @Scheduled(fixedRate = 3600000)
     public void scrapeAndSaveEvents() {
         for (Scraper scraper : scrapers) {
-            List<Event> events = scraper.scrapeEvents().stream()
-                    // discard events without date or in the past
+            List<Event> scraped = scraper.scrapeEvents();
+            // Normalize, drop invalid/past, hash
+            List<Event> normalized = scraped.stream()
                     .filter(e -> e.getDate() != null && !e.getDate().isBefore(LocalDate.now()))
-                    // basic normalization
                     .peek(this::normalize)
-                    .peek(event -> event.setEventHash(EventHasher.generateHash(event)))
+                    .peek(e -> e.setEventHash(EventHasher.generateHash(e)))
                     .toList();
+
+            // In-batch de-duplication by eventHash: keep the "best" instance
+            java.util.Map<String, Event> byHash = new java.util.LinkedHashMap<>();
+            for (Event e : normalized) {
+                Event existing = byHash.get(e.getEventHash());
+                if (existing == null || isBetter(e, existing)) {
+                    byHash.put(e.getEventHash(), e);
+                }
+            }
+            List<Event> events = new java.util.ArrayList<>(byHash.values());
 
             saveEventsSmart(events);
             System.out.println("Scraped " + events.size() + " events from " + scraper.getClass().getSimpleName());
@@ -46,6 +56,26 @@ public class ScraperService {
         if (e.getPrice() != null) e.setPrice(e.getPrice().trim());
         if (e.getDescription() != null) e.setDescription(e.getDescription().trim());
         if (e.getMisc() != null) e.setMisc(e.getMisc().trim());
+    }
+
+    // Prefer entries with more concrete data (beginn/einlass times, thumbnail, numeric price, longer description)
+    private boolean isBetter(Event candidate, Event current) {
+        int scoreC = score(candidate);
+        int scoreX = score(current);
+        if (scoreC != scoreX) return scoreC > scoreX;
+        // tie-breaker: longer description
+        int lenC = candidate.getDescription() == null ? 0 : candidate.getDescription().length();
+        int lenX = current.getDescription() == null ? 0 : current.getDescription().length();
+        return lenC > lenX;
+    }
+
+    private int score(Event e) {
+        int s = 0;
+        if (e.getBeginn() != null) s += 2;
+        if (e.getEinlass() != null) s += 1;
+        if (org.springframework.util.StringUtils.hasText(e.getThumbnail())) s += 1;
+        if (org.springframework.util.StringUtils.hasText(e.getPrice()) && e.getPrice().matches(".*\\\d.*")) s += 1;
+        return s;
     }
 
     private void saveEventsSmart(List<Event> newEvents) {
