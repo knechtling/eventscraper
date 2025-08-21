@@ -27,18 +27,20 @@ public class EventController {
     public String getEvents(@RequestParam(value = "search", required = false) String search, Model model) {
         List<Event> events;
         if (search != null && !search.isEmpty()) {
-            events = eventService.searchEventsByTitleOrDescription(search);
+            events = eventService.searchUpcomingEventsByTitleOrDescription(search);
         } else {
-            events = eventService.getSortedEvents();
+            events = eventService.getUpcomingEventsSorted();
         }
         model.addAttribute("events", events);
         model.addAttribute("search", search);
-        model.addAttribute("locations", eventService.getUniqueLocations());
+        model.addAttribute("locations", eventService.getUniqueLocationsFromUpcoming());
         return "welcome";
     }
-@GetMapping("/event/details/{id}")
-public String showEventDetails(@PathVariable Long id, Model model) {
-    Event event = eventRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid event Id:" + id));
-    model.addAttribute("event", event);
-    return "eventDetails";
-}}
+
+    @GetMapping("/event/details/{id}")
+    public String showEventDetails(@PathVariable Long id, Model model) {
+        Event event = eventRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid event Id:" + id));
+        model.addAttribute("event", event);
+        return "eventDetails";
+    }
+}

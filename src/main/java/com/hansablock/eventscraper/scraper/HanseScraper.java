@@ -17,6 +17,9 @@ import java.util.List;
 @Component
 public class HanseScraper implements Scraper {
 
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+
     @Override
     public List<Event> scrapeEvents() {
         List<Event> events = new ArrayList<>();
@@ -26,11 +29,11 @@ public class HanseScraper implements Scraper {
             Elements eventList = doc.select("#content > article:not(#past_events)");
 
             for (Element eventElement : eventList) {
-                // Parse date
+                // Parse date (e.g., 21.08.2025)
                 String dateText = eventElement.select("h1 > span:nth-of-type(1)").text().trim();
                 LocalDate date = parseDate(dateText);
 
-                // Parse start time
+                // Parse start time (e.g., 20:00 Uhr)
                 String timeText = eventElement.select("h1 > span:nth-of-type(2)").text().trim();
                 LocalTime startTime = parseTime(timeText);
 
@@ -64,21 +67,10 @@ public class HanseScraper implements Scraper {
         return events;
     }
 
-    /**
-     * Helper method to parse date from string.
-     *
-     * @param dateText the text containing the date
-     * @return the parsed LocalDate
-     */
     private LocalDate parseDate(String dateText) {
         try {
-            // Split in case multiple dates are present
-            String[] dateParts = dateText.split(" ");
-            String firstDate = dateParts[0]; // Take only the first date
-
-            // Determine the correct date format
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            return LocalDate.parse(firstDate, formatter);
+            String normalized = dateText.replace(',', ' ').trim().split(" ")[0];
+            return LocalDate.parse(normalized, DATE_FMT);
         } catch (Exception e) {
             System.err.println("[Hanse3] Failed to parse date: " + dateText);
             e.printStackTrace();
@@ -86,19 +78,10 @@ public class HanseScraper implements Scraper {
         }
     }
 
-    /**
-     * Helper method to parse time from string.
-     *
-     * @param timeText the text containing the time
-     * @return the parsed LocalTime
-     */
     private LocalTime parseTime(String timeText) {
         try {
-            // Split in case multiple times are present
-            String[] timeParts = timeText.replace(" Uhr", "").trim().split(" ");
-            String firstTime = timeParts[0]; // Take only the first time
-
-            return LocalTime.parse(firstTime, DateTimeFormatter.ofPattern("HH:mm"));
+            String firstTime = timeText.replace(" Uhr", "").trim().split(" ")[0];
+            return LocalTime.parse(firstTime, TIME_FMT);
         } catch (Exception e) {
             System.err.println("[Hanse3] Failed to parse time: " + timeText);
             e.printStackTrace();

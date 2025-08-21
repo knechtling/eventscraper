@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,20 +24,19 @@ public class ChemoScraper implements Scraper {
 
         try {
             Document doc = Jsoup.connect("https://www.chemiefabrik.info/gigs/").get();
-            Elements eventList = doc.select("div.jet-listing-grid__item" +
-                    ":not(:contains(abgesagt))" +
-                    ":not(:contains(verlegt))");
-
-            Month currentMonth = null;
+            Elements eventList = doc.select("div.jet-listing-grid__item"
+                    + ":not(:contains(abgesagt))"
+                    + ":not(:contains(verlegt))");
 
             for (Element event : eventList) {
-                // Parse date
+                // Parse date (format like: "Do 21.08.25")
                 String dateText = event.selectFirst(".jet-listing-dynamic-field__content").text();
-                dateText = dateText.substring(dateText.indexOf(' ') + 1); // Remove day of week
-                String[] dateParts = dateText.split("\\.");
+                String trimmed = dateText.substring(dateText.indexOf(' ') + 1); // Remove day of week
+                String[] dateParts = trimmed.split("\\.");
                 int day = Integer.parseInt(dateParts[0]);
                 int month = Integer.parseInt(dateParts[1]);
-                int year = Integer.parseInt(dateParts[2]) + 2000; // Assuming the year is in 'yy' format
+                String yearPart = dateParts[2];
+                int year = yearPart.length() == 2 ? Integer.parseInt(yearPart) + 2000 : Integer.parseInt(yearPart);
                 LocalDate date = LocalDate.of(year, month, day);
 
                 // Parse entry and start times
@@ -58,9 +56,8 @@ public class ChemoScraper implements Scraper {
                 // Parse description
                 Elements descriptionElements = event.select("div.jet-listing-dynamic-repeater__item:not(:has(h4)):has(.bandlink)");
                 StringBuilder description = new StringBuilder();
-
                 for (Element descriptionElement : descriptionElements) {
-                    description.append(descriptionElement.text()).append("<br />");
+                    description.append(descriptionElement.text()).append("\u003cbr /\u003e");
                 }
 
                 // Parse misc
@@ -68,13 +65,12 @@ public class ChemoScraper implements Scraper {
 
                 // Parse thumbnail
                 String thumbnail = event.select(".size-medium_large").attr("src");
-                System.out.println("Thumbnail URL: " + thumbnail);
 
                 String location = "Chemiefabrik";
                 Event newEvent = new Event(null, title, location, date, description.toString().trim(), entryTime, startTime, priceText, misc, thumbnail);
                 events.add(newEvent);
             }
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             e.printStackTrace();
         }
 
@@ -83,19 +79,17 @@ public class ChemoScraper implements Scraper {
 
     /**
      * Helper method to parse time from the event element.
-     *
-     * @param event    the event element
-     * @param selector the CSS selector for the time element
-     * @param prefix   the prefix to identify the time string
-     * @return the parsed LocalTime, or null if not found
      */
-    private LocalTime parseTime(Element event, String selector, String prefix) {
+    public LocalTime parseTime(Element event, String selector, String prefix) {
         String timeText = event.select(selector).text();
         if (timeText.contains(prefix)) {
             String[] parts = timeText.split(" ");
             if (parts.length > 1) {
                 String timePart = parts[1].replace(".", ":");
-                return LocalTime.parse(timePart, DateTimeFormatter.ofPattern("HH:mm"));
+                try {
+                    return LocalTime.parse(timePart, DateTimeFormatter.ofPattern("HH:mm"));
+                } catch (Exception ignored) {
+                }
             }
         }
         return null;

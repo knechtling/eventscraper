@@ -79,34 +79,40 @@ public class TanteJuScraper implements Scraper {
         return fetchEventDetails(title, startDateTime, url, description);
     }
 
-    private Event fetchEventDetails(String title, LocalDateTime startDateTime, String url, String description) {
+    private Event fetchEventDetails(String title, LocalDateTime startDateTime, String url, String descriptionFromIcs) {
+        String price = "";
+        String thumbnailUrl = "";
+        LocalTime einlassTime = null;
+        LocalTime beginnTime = null;
+        String pageSnippet = "";
         try {
-            Document doc = Jsoup.connect(url).get();
-            String price = extractPrice(doc);
-            String thumbnailUrl = extractThumbnailUrl(doc);
-            LocalTime einlassTime = null;
-            LocalTime beginnTime = null;
-            Element infosElement = doc.selectFirst("div.single_event_infos");
-            if (infosElement != null) {
-                String infosText = infosElement.text();
-                einlassTime = extractTime(infosText, "Einlass:");
-                beginnTime = extractTime(infosText, "Beginn:");
+            if (url != null && !url.isBlank()) {
+                Document doc = Jsoup.connect(url).get();
+                price = extractPrice(doc);
+                thumbnailUrl = extractThumbnailUrl(doc);
+                Element infosElement = doc.selectFirst("div.single_event_infos");
+                if (infosElement != null) {
+                    String infosText = infosElement.text();
+                    einlassTime = extractTime(infosText, "Einlass:");
+                    beginnTime = extractTime(infosText, "Beginn:");
+                }
+                Element snippet = doc.selectFirst("div.single_event_text");
+                if (snippet != null) {
+                    pageSnippet = snippet.text();
+                }
             }
-            String misc = description + "\n" + url;
-            description = truncateMisc(misc, 100); // Truncate to 100 characters
-
-            return new Event(null, title, "Tante Ju", startDateTime != null ? startDateTime.toLocalDate() : null, description, einlassTime, beginnTime, price, misc, thumbnailUrl);
         } catch (Exception e) {
             logger.error("Error fetching event details for URL: {}", url, e);
         }
-        return new Event(null, title, "Tante Ju", startDateTime != null ? startDateTime.toLocalDate() : null, description, null, null, "", description + "\n" + url, url);
+        String misc = (descriptionFromIcs == null ? "" : descriptionFromIcs) + (url == null ? "" : ("\n" + url));
+        String description = truncate(pageSnippet.isBlank() ? descriptionFromIcs : pageSnippet, 200);
+        return new Event(null, title, "Tante Ju", startDateTime != null ? startDateTime.toLocalDate() : null, description, einlassTime, beginnTime, price, misc, thumbnailUrl);
     }
 
-    private String truncateMisc(String misc, int length) {
-        if (misc.length() <= length) {
-            return misc;
-        }
-        return misc.substring(0, length) + "...";
+    private String truncate(String text, int length) {
+        if (text == null) return "";
+        if (text.length() <= length) return text;
+        return text.substring(0, length) + "...";
     }
 
     private String extractPrice(Document doc) {
@@ -124,20 +130,37 @@ public class TanteJuScraper implements Scraper {
         return "";
     }
 
-private String extractThumbnailUrl(Document doc) {
-    Element thumbnailElement = doc.selectFirst(".news img[src~=(?i)\\.(png|jpe?g)]");
-    if (thumbnailElement == null) {
-        thumbnailElement = doc.selectFirst("img.soliloquy-preload");
+    public String extractThumbnailUrl(Document doc) {
+        if (doc == null) return "";
+        Element thumbnailElement = doc.selectFirst(".news img[src$=.jpg], .news img[src$=.jpeg], .news img[src$=.png]");
+        if (thumbnailElement == null) {
+            thumbnailElement = doc.selectFirst("img.soliloquy-preload");
+        }
+        if (thumbnailElement == null) {
+            thumbnailElement = doc.selectFirst("img[src]");
+        }
+        return thumbnailElement != null ? thumbnailElement.attr("src") : "";
     }
-    System.out.println("Thumbnail element: " + thumbnailElement);
-    return thumbnailElement != null ? thumbnailElement.attr("src") : "";
-}
-    private static LocalTime extractTime(String text, String label) {
-        Pattern pattern = Pattern.compile(label + "\\s*(\\d{2}:\\d{2})\\s*Uhr");
-        Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) {
-            String timeString = matcher.group(1);
-            return LocalTime.parse(timeString, DateTimeFormatter.ofPattern("HH:mm"));
+
+    public static LocalTime extractTime(String text, String label) {
+        if (text == null) return null;
+        // First try strict label-prefixed pattern
+        try {
+            Pattern pattern = Pattern.compile(Pattern.quote(label) + "\\s*(\\d{2}:\\d{2})\\s*Uhr");
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.find()) {
+                String timeString = matcher.group(1);
+                return LocalTime.parse(timeString, DateTimeFormatter.ofPattern("HH:mm"));
+            }
+        } catch (Exception ignored) {}
+        // Fallback: find any HH:mm pattern in the text
+        Matcher generic = Pattern.compile("(\\d{1,2})[:.](\\d{2})").matcher(text);
+        if (generic.find()) {
+            int h = Integer.parseInt(generic.group(1));
+            int m = Integer.parseInt(generic.group(2));
+            if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+                return LocalTime.of(h, m);
+            }
         }
         return null;
     }

@@ -3,6 +3,7 @@ package com.hansablock.eventscraper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,18 +17,22 @@ public class EventService {
         this.eventRepository = eventRepository;
     }
 
-    public List<Event> getSortedEvents() {
-        return eventRepository.findAllByOrderByDateAsc();
+    // Upcoming-only, sorted by date
+    public List<Event> getUpcomingEventsSorted() {
+        return eventRepository.findAllByDateGreaterThanEqualOrderByDateAsc(LocalDate.now());
     }
 
-    public List<Event> searchEventsByTitleOrDescription(String searchTerm) {
-        return eventRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(searchTerm, searchTerm);
+    // Upcoming-only search in title or description
+    public List<Event> searchUpcomingEventsByTitleOrDescription(String searchTerm) {
+        return eventRepository.searchUpcoming(searchTerm, LocalDate.now());
     }
 
-    public List<String> getUniqueLocations() {
-        return eventRepository.findAll().stream() // Get all events
-                .map(Event::getLocation) // Get the location of each event
-                .distinct() // Get only unique locations
-                .collect(Collectors.toList()); // Collect the unique locations to a list
+    // Unique locations from upcoming events only
+    public List<String> getUniqueLocationsFromUpcoming() {
+        return eventRepository.findAllByDateGreaterThanEqualOrderByDateAsc(LocalDate.now()).stream()
+                .map(Event::getLocation)
+                .filter(loc -> loc != null && !loc.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class ScheunenScraper implements Scraper {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheunenScraper.class);
     private static final String BASE_URL = "https://scheune.org";
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
     @Override
     public List<Event> scrapeEvents() {
@@ -30,7 +32,6 @@ public class ScheunenScraper implements Scraper {
 
         try {
             Document doc = Jsoup.connect(BASE_URL).get();
-            Elements eventList = doc.select("div.va"); // Each "va" represents an event
 
             LocalDate currentEventDate = null; // To hold the last valid date
             int currentYear = LocalDate.now().getYear(); // Default year
@@ -55,15 +56,24 @@ public class ScheunenScraper implements Scraper {
                         }
                     }
 
+                    // Skip if date could not be determined yet
+                    if (currentEventDate == null) {
+                        continue;
+                    }
+
                     // Parse title
                     String title = headerOrEvent.select("h2.va_titel").text();
 
                     // Parse Beginn time
                     String beginnText = headerOrEvent.select("span.va_uhrzeit").text();
                     String beginn = beginnText.replace(" Uhr", "");
+                    LocalTime beginnTime = null;
+                    try {
+                        beginnTime = LocalTime.parse(beginn, TIME_FMT);
+                    } catch (Exception ignored) {}
 
                     // Parse description
-                    String description = headerOrEvent.select("a.term.reihe_link").text() + "<br>" + headerOrEvent.select("a.va_location").text();
+                    String description = headerOrEvent.select("a.term.reihe_link").text() + "\u003cbr\u003e" + headerOrEvent.select("a.va_location").text();
 
                     // Follow link for misc and thumbnail
                     String misc = "";
@@ -71,6 +81,9 @@ public class ScheunenScraper implements Scraper {
                     Element titleElement = headerOrEvent.selectFirst("div.titel > a");
                     if (titleElement != null) {
                         String detailPageUrl = titleElement.attr("href");
+                        if (detailPageUrl.startsWith("/")) {
+                            detailPageUrl = BASE_URL + detailPageUrl;
+                        }
                         Document detailDoc = Jsoup.connect(detailPageUrl).get();
 
                         // Parse misc from detail page
@@ -80,7 +93,7 @@ public class ScheunenScraper implements Scraper {
                         }
 
                         // Append detailPageUrl to misc
-                        misc += "<br><a href=\"" + detailPageUrl + "\">More details</a>";
+                        misc += "\u003cbr\u003e\u003ca href=\"" + detailPageUrl + "\"\u003eMore details\u003c/a\u003e";
 
                         // Parse thumbnail from detail page
                         Element thumbnailElement = detailDoc.selectFirst("figure a[rel='galerie[]'] img");
@@ -99,7 +112,7 @@ public class ScheunenScraper implements Scraper {
                             currentEventDate,
                             description,
                             null, // Entry time not provided
-                            LocalTime.parse(beginn),
+                            beginnTime,
                             null, // Price not provided
                             misc,
                             thumbnail
@@ -117,11 +130,8 @@ public class ScheunenScraper implements Scraper {
 
     /**
      * Helper method to map German month names to java.time.Month enum.
-     *
-     * @param germanMonth the German month name
-     * @return the corresponding java.time.Month
      */
-    private static Month getMonthFromGerman(String germanMonth) {
+    public static Month getMonthFromGerman(String germanMonth) {
         switch (germanMonth.toLowerCase(java.util.Locale.GERMAN)) {
             case "januar": return Month.JANUARY;
             case "februar": return Month.FEBRUARY;
