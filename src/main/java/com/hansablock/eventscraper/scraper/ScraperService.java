@@ -74,7 +74,7 @@ public class ScraperService {
         if (e.getBeginn() != null) s += 2;
         if (e.getEinlass() != null) s += 1;
         if (org.springframework.util.StringUtils.hasText(e.getThumbnail())) s += 1;
-        if (org.springframework.util.StringUtils.hasText(e.getPrice()) && e.getPrice().matches(".*\\\d.*")) s += 1;
+        if (org.springframework.util.StringUtils.hasText(e.getPrice()) && java.util.regex.Pattern.compile("\\d").matcher(e.getPrice()).find()) s += 1;
         return s;
     }
 
