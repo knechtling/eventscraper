@@ -61,7 +61,8 @@ public class HanseScraper implements Scraper {
                 String location = "Hanse3";
 
                 Event newEvent = new Event(null, title, location, date, misc, null, startTime, null, misc, thumbnail);
-                if (sourceUrl != null && !sourceUrl.isBlank()) newEvent.setSourceUrl(sourceUrl);
+                if (sourceUrl == null || sourceUrl.isBlank()) sourceUrl = "https://hanse3.de/Veranstaltungen/";
+                newEvent.setSourceUrl(sourceUrl);
                 events.add(newEvent);
             }
         } catch (IOException e) {

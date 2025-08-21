@@ -28,7 +28,7 @@ Common commands
 
 - Run tests matching a pattern
   ./mvnw -q -Dtest="*ServiceTest" test
-
+c
 - Generate dependency tree (debug builds)
   ./mvnw -q dependency:tree
 

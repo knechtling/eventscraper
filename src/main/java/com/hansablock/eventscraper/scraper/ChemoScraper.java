@@ -112,7 +112,8 @@ public class ChemoScraper implements Scraper {
 
                 String location = "Chemiefabrik";
                 Event newEvent = new Event(null, title, location, date, description.toString().trim(), entryTime, startTime, priceText, misc.toString(), thumbnail);
-                if (sourceUrl != null && !sourceUrl.isBlank()) newEvent.setSourceUrl(sourceUrl);
+                if (sourceUrl == null || sourceUrl.isBlank()) sourceUrl = "https://www.chemiefabrik.info/gigs/";
+                newEvent.setSourceUrl(sourceUrl);
                 events.add(newEvent);
             }
         } catch (IOException | RuntimeException e) {

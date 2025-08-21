@@ -107,6 +107,7 @@ public class TanteJuScraper implements Scraper {
         String misc = (descriptionFromIcs == null ? "" : descriptionFromIcs) + (url == null ? "" : ("\n" + url));
         String description = truncate(pageSnippet.isBlank() ? descriptionFromIcs : pageSnippet, 200);
         Event e = new Event(null, title, "Tante Ju", startDateTime != null ? startDateTime.toLocalDate() : null, description, einlassTime, beginnTime, price, misc, thumbnailUrl);
+        if (url == null || url.isBlank()) url = "https://www.liveclub-dresden.de/events/";
         e.setSourceUrl(url);
         return e;
     }
