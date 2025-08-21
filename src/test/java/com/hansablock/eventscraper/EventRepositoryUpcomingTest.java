@@ -9,7 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@DataJpaTest(properties = "spring.profiles.active=test")
 class EventRepositoryUpcomingTest {
 
     @Autowired
