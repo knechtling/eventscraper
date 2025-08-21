@@ -62,17 +62,19 @@ public class ChemoScraper implements Scraper {
                 }
 
                 // Prices: collect VVK / AK / Spendenempfehlung and VVK-Stelle
-                String vvk = findFirst(VVK_PATTERN, fullText);
-                String ak = findFirst(AK_PATTERN, fullText);
-                String spende = findFirst(SPENDE_PATTERN, fullText);
-                String vvkStelle = findFirst(VVK_STELLE_PATTERN, fullText);
+                // Prefer tight extraction by token-bounded segments to avoid dragging description text
+                String vvk = extractSegment(fullText, "VVK:");
+                String ak = extractSegment(fullText, "AK:");
+                String spende = extractSegment(fullText, "Spendenempfehlung:");
+                String vvkStelle = extractSegment(fullText, "VVK-Stelle:");
+
                 StringBuilder priceSb = new StringBuilder();
-                if (vvk != null) priceSb.append("VVK: ").append(vvk.trim());
-                if (ak != null) {
+                if (vvk != null && !vvk.isBlank()) priceSb.append("VVK: ").append(vvk.trim());
+                if (ak != null && !ak.isBlank()) {
                     if (!priceSb.isEmpty()) priceSb.append(" | ");
                     priceSb.append("AK: ").append(ak.trim());
                 }
-                if (spende != null) {
+                if (spende != null && !spende.isBlank()) {
                     if (!priceSb.isEmpty()) priceSb.append(" | ");
                     priceSb.append("Spendenempfehlung: ").append(spende.trim());
                 }
@@ -114,6 +116,20 @@ public class ChemoScraper implements Scraper {
     private static String findFirst(Pattern p, String text) {
         Matcher m = p.matcher(text);
         if (m.find()) return m.group(1);
+        return null;
+    }
+
+    // Extracts the value after a label (e.g., "VVK:") up to the next known label or end of string
+    private static String extractSegment(String text, String label) {
+        if (text == null) return null;
+        String pattern = Pattern.quote(label) + "\\s*(.*?)(?=\\s+(AK:|VVK:|Spendenempfehlung:|VVK-Stelle:|Einlass:|Beginn:)|$)";
+        Matcher m = Pattern.compile(pattern).matcher(text);
+        if (m.find()) {
+            String val = m.group(1).trim();
+            // keep it short to avoid pulling sentences; typical tokens are short
+            if (val.length() > 120) val = val.substring(0, 120);
+            return val;
+        }
         return null;
     }
 
