@@ -11,7 +11,7 @@
 <body>
 <div class="container">
     <h1>Veranstaltungen</h1>
-    <div th:replace="fragments/darkmode-button :: darkmodeButton"></div>
+    <div th:replace="~{fragments/darkmode-button :: darkmodeButton}"></div>
     <div class="search-box">
         <form action="/" method="get">
             <input type="text" name="search" placeholder="Veranstaltungen suchen..." th:value="${search}">
@@ -26,24 +26,30 @@
         </select>
     </div>
     <div class="events-grid" id="events">
-        <div class="event-card" th:each="event : ${events}" data-date="[[${event.date}]]">
-            <div class="event-thumbnail"
-                 th:attr="data-src=${event.thumbnail}"
-                 th:style="'background-image: url(/images/placeholder.webp)'">
-            </div>
+        <div class="event-card" th:each="event : ${events}" th:attr="data-date=${event.date},data-location=${event.location}">
+            <div class="event-thumbnail" th:attr="data-src=${event.thumbnail}"></div>
             <div class="event-details">
-                <h3 th:text="${event.title}"></h3>
-                <p th:if="${event.location}"><strong>Ort:</strong> <span th:text="${event.location}"></span></p>
-                <p th:if="${event.getFormattedDate()}"><strong>Datum:</strong> <span th:text="${event.getFormattedDate()}"></span></p>
-                <p th:if="${event.description}"><strong>Beschreibung:</strong> <span th:utext="${event.description}"></span></p>
-                <p th:if="${event.einlass}"><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
-                <p th:if="${event.beginn}"><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
-                <p th:if="${event.price}"><strong>Preis:</strong> <span th:text="${event.price}"></span></p>
+                <div class="badges">
+                    <span class="badge" th:text="${event.getFormattedDate()}"></span>
+                    <span class="badge" th:text="${event.location}"></span>
+                    <span class="badge brand" th:if="${event.price}" th:text="${event.price}"></span>
+                </div>
+                <div class="event-title" th:text="${event.title}"></div>
+                <div class="event-meta">
+                    <p th:if="${event.einlass}"><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
+                    <p th:if="${event.beginn}"><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
+                    <p th:if="${event.description}"><span th:utext="${event.description}"></span></p>
+                </div>
             </div>
             <div class="mehr-anzeigen">
-                <a th:href="@{/event/details/{id}(id=${event.id})}">Mehr anzeigen</a>
+                <a class="btn primary" th:href="@{/event/details/{id}(id=${event.id})}">Mehr anzeigen</a>
+                <a class="btn ghost" th:if="${event.sourceUrl}" th:href="${event.sourceUrl}" target="_blank" rel="noopener">Zur Quelle</a>
             </div>
         </div>
+    </div>
+    <div class="footer">
+        <span>Letzte Aktualisierung in Echtzeit während der Tests</span>
+        <a href="/admin/scrapers">Scraper Health</a>
     </div>
 </div>
 <script src="/js/lazyLoadImages.js"></script>
@@ -65,15 +71,18 @@
             const [startDate, endDate] = dateRangePicker.selectedDates;
 
             document.querySelectorAll('.event-card').forEach(card => {
-                const locationText = card.querySelector('.event-details p:nth-child(2) span').textContent.toLowerCase();
-                const dateText = card.querySelector('.event-details p:nth-child(3) span').textContent;
-                const [day, month, year] = dateText.split('.').map(part => parseInt(part));
-                const eventDate = new Date(year, month - 1, day);
+                const locationText = (card.getAttribute('data-location') || '').toLowerCase();
+                const isoDate = card.getAttribute('data-date');
+                let eventDate = null;
+                if (isoDate) {
+                    const [y, m, d] = isoDate.split('-').map(Number);
+                    eventDate = new Date(y, m - 1, d);
+                }
 
                 const matchesLocation = !selectedLocation || locationText === selectedLocation;
                 const matchesDate =
-                    (!startDate || eventDate >= startDate) &&
-                    (!endDate || eventDate <= endDate);
+                    (!startDate || (eventDate && eventDate >= startDate)) &&
+                    (!endDate || (eventDate && eventDate <= endDate));
 
                 if ((!selectedLocation && !startDate && !endDate) || (matchesLocation && matchesDate)) {
                     card.style.display = '';

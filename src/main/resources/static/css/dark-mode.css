@@ -1,3 +1,6 @@
+/* Placeholder for dark-mode button integration; variables already tuned for dark UI */
+.dark-mode{--bg:#0a0d12;--bg-soft:#0e141d;--card:#0f1520;--surface:#0c1119;--border:#1b2736;--text:#e6edf6;--muted:#9bb3c7}
+
 /* Dark Mode */
 .dark-mode {
     background-color: #121212;
