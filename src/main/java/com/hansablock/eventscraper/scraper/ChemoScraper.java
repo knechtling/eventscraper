@@ -62,11 +62,20 @@ public class ChemoScraper implements Scraper {
                 }
 
                 // Prices: collect VVK / AK / Spendenempfehlung and VVK-Stelle
-                // Prefer tight extraction by token-bounded segments to avoid dragging description text
-                String vvk = extractSegment(fullText, "VVK:");
-                String ak = extractSegment(fullText, "AK:");
-                String spende = extractSegment(fullText, "Spendenempfehlung:");
-                String vvkStelle = extractSegment(fullText, "VVK-Stelle:");
+                // 1) Prefer element-scoped extraction to avoid mixing in description
+                String vvk = null, ak = null, spende = null, vvkStelle = null;
+                for (Element el : event.select(".jet-listing-dynamic-field__content")) {
+                    String t = el.text().trim();
+                    if (t.startsWith("VVK:")) vvk = cleanPriceValue(t.substring(4));
+                    else if (t.startsWith("AK:")) ak = cleanPriceValue(t.substring(3));
+                    else if (t.startsWith("Spendenempfehlung:")) spende = cleanPriceValue(t.substring("Spendenempfehlung:".length()));
+                    else if (t.startsWith("VVK-Stelle:")) vvkStelle = cleanPriceValue(t.substring("VVK-Stelle:".length()));
+                }
+                // 2) Fallback to label-bounded extraction from full text if not found
+                if (vvk == null) vvk = extractSegment(fullText, "VVK:");
+                if (ak == null) ak = extractSegment(fullText, "AK:");
+                if (spende == null) spende = extractSegment(fullText, "Spendenempfehlung:");
+                if (vvkStelle == null) vvkStelle = extractSegment(fullText, "VVK-Stelle:");
 
                 StringBuilder priceSb = new StringBuilder();
                 if (vvk != null && !vvk.isBlank()) priceSb.append("VVK: ").append(vvk.trim());
@@ -131,6 +140,20 @@ public class ChemoScraper implements Scraper {
             return val;
         }
         return null;
+    }
+
+    private static String cleanPriceValue(String s) {
+        if (s == null) return null;
+        String v = s.trim();
+        // Stop at first obvious sentence boundary to avoid dragging narrative text
+        int cut = v.indexOf("  "); // double space often separates blocks
+        if (cut < 0) cut = v.indexOf("  "); // non-breaking space
+        if (cut > 0) v = v.substring(0, cut);
+        // Heuristic: if there is a long sequence without currency/number, keep only first 40 chars
+        if (!v.matches(".*(\\d|€|Euro|frei|ermäßigt|zzgl).*") && v.length() > 40) {
+            v = v.substring(0, 40);
+        }
+        return v;
     }
 
     private static String cap(String s, int max) {
