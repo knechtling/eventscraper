@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ public class ScraperService {
 
     private final EventRepository eventRepository;
     private final List<Scraper> scrapers;
+    private final ScrapeRunRepository scrapeRunRepository;
 
     private static final int MAX_TITLE = 255;
     private static final int MAX_PRICE = 255;
@@ -39,35 +41,55 @@ public class ScraperService {
     );
 
     @Autowired
-    public ScraperService(EventRepository eventRepository, List<Scraper> scrapers) {
+    public ScraperService(EventRepository eventRepository, List<Scraper> scrapers, ScrapeRunRepository scrapeRunRepository) {
         this.eventRepository = eventRepository;
         this.scrapers = scrapers;
+        this.scrapeRunRepository = scrapeRunRepository;
     }
 
     @Scheduled(fixedRate = 3600000)
     @Transactional
     public void scrapeAndSaveEvents() {
         for (Scraper scraper : scrapers) {
-            List<Event> scraped = scraper.scrapeEvents();
-            // Normalize, drop invalid/past, hash
-            List<Event> normalized = scraped.stream()
-                    .filter(e -> e.getDate() != null && !e.getDate().isBefore(LocalDate.now()))
-                    .peek(this::normalize)
-                    .peek(e -> e.setEventHash(EventHasher.generateHash(e)))
-                    .toList();
+            String scraperName = scraper.getClass().getSimpleName();
+            ScrapeRun run = new ScrapeRun(scraperName, Instant.now());
+            run.setMessage("started");
+            run = scrapeRunRepository.save(run);
+            int added = 0, updated = 0, errors = 0;
+            try {
+                List<Event> scraped = scraper.scrapeEvents();
+                // Normalize, drop invalid/past, hash
+                List<Event> normalized = scraped.stream()
+                        .filter(e -> e.getDate() != null && !e.getDate().isBefore(LocalDate.now()))
+                        .peek(this::normalize)
+                        .peek(e -> e.setEventHash(EventHasher.generateHash(e)))
+                        .toList();
 
-            // In-batch de-duplication by eventHash: keep the "best" instance
-            java.util.Map<String, Event> byHash = new java.util.LinkedHashMap<>();
-            for (Event e : normalized) {
-                Event existing = byHash.get(e.getEventHash());
-                if (existing == null || isBetter(e, existing)) {
-                    byHash.put(e.getEventHash(), e);
+                // In-batch de-duplication by eventHash: keep the "best" instance
+                java.util.Map<String, Event> byHash = new java.util.LinkedHashMap<>();
+                for (Event e : normalized) {
+                    Event existing = byHash.get(e.getEventHash());
+                    if (existing == null || isBetter(e, existing)) {
+                        byHash.put(e.getEventHash(), e);
+                    }
                 }
-            }
-            List<Event> events = new java.util.ArrayList<>(byHash.values());
+                List<Event> events = new java.util.ArrayList<>(byHash.values());
 
-            saveEventsSmart(events);
-            System.out.println("Scraped " + events.size() + " events from " + scraper.getClass().getSimpleName());
+                SaveStats stats = saveEventsSmart(events);
+                added = stats.added;
+                updated = stats.updated;
+                System.out.println("Scraped " + events.size() + " events from " + scraperName);
+            } catch (Exception ex) {
+                errors += 1;
+                run.setMessage((run.getMessage() == null ? "" : run.getMessage() + " | ") + ex.getClass().getSimpleName());
+                throw ex;
+            } finally {
+                run.setAdded(run.getAdded() + added);
+                run.setUpdated(run.getUpdated() + updated);
+                run.setErrors(run.getErrors() + errors);
+                run.setFinishedAt(Instant.now());
+                scrapeRunRepository.save(run);
+            }
         }
     }
 
@@ -151,22 +173,33 @@ public class ScraperService {
         return s;
     }
 
-    private void saveEventsSmart(List<Event> newEvents) {
-        newEvents.forEach(event -> {
-            eventRepository.findByEventHash(event.getEventHash())
-                    .ifPresentOrElse(
-                            existing -> updateExisting(existing, event),
-                            () -> {
-                                try {
-                                    eventRepository.save(event);
-                                } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-                                    // Handle concurrent insert of same hash: fetch and update
-                                    eventRepository.findByEventHash(event.getEventHash())
-                                            .ifPresent(existing -> updateExisting(existing, event));
-                                }
-                            }
-                    );
-        });
+    private SaveStats saveEventsSmart(List<Event> newEvents) {
+        int added = 0;
+        int updated = 0;
+        for (Event event : newEvents) {
+            java.util.Optional<Event> opt = eventRepository.findByEventHash(event.getEventHash());
+            if (opt.isPresent()) {
+                updateExisting(opt.get(), event);
+                updated++;
+            } else {
+                try {
+                    eventRepository.save(event);
+                    added++;
+                } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                    // Handle concurrent insert of same hash: fetch and update
+                    eventRepository.findByEventHash(event.getEventHash())
+                            .ifPresent(existing -> updateExisting(existing, event));
+                    updated++;
+                }
+            }
+        }
+        return new SaveStats(added, updated);
+    }
+
+    private static class SaveStats {
+        final int added;
+        final int updated;
+        SaveStats(int a, int u) { this.added = a; this.updated = u; }
     }
 
     private void updateExisting(Event existing, Event newVersion) {
