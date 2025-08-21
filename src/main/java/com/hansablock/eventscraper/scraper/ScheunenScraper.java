@@ -78,31 +78,81 @@ public class ScheunenScraper implements Scraper {
                     // Follow link for misc and thumbnail
                     String misc = "";
                     String thumbnail = "";
+                    LocalTime einlassTime = null;
+                    String price = null;
+                    String location = "Scheune Dresden";
+
                     Element titleElement = headerOrEvent.selectFirst("div.titel > a");
+                    String detailPageUrl = null;
                     if (titleElement != null) {
-                        String detailPageUrl = titleElement.attr("href");
+                        detailPageUrl = titleElement.attr("href");
                         if (detailPageUrl.startsWith("/")) {
                             detailPageUrl = BASE_URL + detailPageUrl;
                         }
                         Document detailDoc = Jsoup.connect(detailPageUrl).get();
 
-                        // Parse misc from detail page
-                        Element miscElement = detailDoc.selectFirst("span.va_txt p");
-                        if (miscElement != null) {
-                            misc = miscElement.html();
+                        // Prefer richer description from left column paragraphs
+                        Elements leftParas = detailDoc.select("#cont .col_left p");
+                        if (!leftParas.isEmpty()) {
+                            StringBuilder desc = new StringBuilder();
+                            int count = 0;
+                            for (Element p : leftParas) {
+                                String html = p.html().trim();
+                                if (html.isEmpty()) continue;
+                                if (desc.length() > 0) desc.append("<br>");
+                                desc.append(html);
+                                if (++count >= 3) break; // keep it concise, details page will show full source
+                            }
+                            if (desc.length() > 0) {
+                                description = desc.toString();
+                            }
                         }
 
-                        // Append detailPageUrl to misc
-                        misc += "\u003cbr\u003e\u003ca href=\"" + detailPageUrl + "\"\u003eMore details\u003c/a\u003e";
+                        // Fallback misc from any descriptive block
+                        if (misc.isBlank()) {
+                            Element miscElement = detailDoc.selectFirst("span.va_txt p, .contentblock p");
+                            if (miscElement != null) {
+                                misc = miscElement.text();
+                            }
+                        }
+
+                        // Extract Einlass and Price from raw text
+                        String allText = detailDoc.text();
+                        java.util.regex.Matcher mEin = java.util.regex.Pattern.compile("Einlass\\s*(ab\\s*)?(\\d{1,2}:\\d{2})\\s*Uhr", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(allText);
+                        if (mEin.find()) {
+                            try { einlassTime = LocalTime.parse(mEin.group(2), TIME_FMT); } catch (Exception ignored) {}
+                        }
+                        java.util.regex.Matcher mBeg = java.util.regex.Pattern.compile("(\\d{1,2}:\\d{2})\\s*Uhr").matcher(allText);
+                        if (beginnTime == null && mBeg.find()) {
+                            try { beginnTime = LocalTime.parse(mBeg.group(1), TIME_FMT); } catch (Exception ignored) {}
+                        }
+                        java.util.regex.Matcher mPrice = java.util.regex.Pattern.compile("(?i)(Eintritt\\s*(frei|[0-9.,]+\\s*€))|\\bAK:?\\s*([^,;\n]+)|\\bVVK:?\\s*([^,;\n]+)").matcher(allText);
+                        java.util.Set<String> priceBits = new java.util.LinkedHashSet<>();
+                        while (mPrice.find()) {
+                            for (int gi = 1; gi <= mPrice.groupCount(); gi++) {
+                                String g = mPrice.group(gi);
+                                if (g != null) {
+                                    String t = g.trim();
+                                    if (!t.isEmpty()) priceBits.add(t);
+                                }
+                            }
+                        }
+                        if (!priceBits.isEmpty()) {
+                            price = String.join(" | ", priceBits);
+                        }
+
+                        // Parse more specific location if present
+                        java.util.regex.Matcher mLoc = java.util.regex.Pattern.compile("scheune\\s+([A-Za-zÄÖÜäöüß]+)").matcher(allText);
+                        if (mLoc.find()) {
+                            location = "Scheune " + mLoc.group(1);
+                        }
 
                         // Parse thumbnail from detail page
-                        Element thumbnailElement = detailDoc.selectFirst("figure a[rel='galerie[]'] img");
+                        Element thumbnailElement = detailDoc.selectFirst("figure a[rel='galerie[]'] img, figure img");
                         if (thumbnailElement != null) {
                             thumbnail = thumbnailElement.attr("src");
                         }
                     }
-                    // Set fixed location
-                    String location = "Scheune Dresden";
 
                     // Create the event
                     Event newEvent = new Event(
@@ -111,20 +161,14 @@ public class ScheunenScraper implements Scraper {
                             location,
                             currentEventDate,
                             description,
-                            null, // Entry time not provided
+                            einlassTime,
                             beginnTime,
-                            null, // Price not provided
+                            price,
                             misc,
                             thumbnail
                     );
+
                     // set source URL if we visited details; otherwise default to base
-                    String detailPageUrl = null;
-                    if (titleElement != null) {
-                        detailPageUrl = titleElement.attr("href");
-                        if (detailPageUrl.startsWith("/")) {
-                            detailPageUrl = BASE_URL + detailPageUrl;
-                        }
-                    }
                     newEvent.setSourceUrl(detailPageUrl != null && !detailPageUrl.isBlank() ? detailPageUrl : BASE_URL);
 
                     events.add(newEvent);
