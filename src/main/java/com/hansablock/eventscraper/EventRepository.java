@@ -28,8 +28,26 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Page<Event> findAllByDateGreaterThanEqual(LocalDate date, Pageable pageable);
 
     @Query(value = "SELECT e FROM Event e WHERE e.date >= :date AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%'))) ORDER BY e.date ASC",
-           countQuery = "SELECT COUNT(e) FROM Event e WHERE e.date >= :date AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%')))")
+           countQuery = "SELECT COUNT(e) FROM Event e WHERE e.date >= :date AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%')))" )
     Page<Event> searchUpcoming(@Param("q") String q, @Param("date") LocalDate date, Pageable pageable);
+
+    @Query(value = "SELECT e FROM Event e " +
+            "WHERE e.date >= :from " +
+            "AND (:to IS NULL OR e.date <= :to) " +
+            "AND (:loc IS NULL OR LOWER(e.location) = LOWER(:loc)) " +
+            "AND ((:q IS NULL OR :q = '') OR LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%'))) " +
+            "ORDER BY e.date ASC",
+           countQuery = "SELECT COUNT(e) FROM Event e " +
+            "WHERE e.date >= :from " +
+            "AND (:to IS NULL OR e.date <= :to) " +
+            "AND (:loc IS NULL OR LOWER(e.location) = LOWER(:loc)) " +
+            "AND ((:q IS NULL OR :q = '') OR LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%')))"
+    )
+    Page<Event> searchUpcomingWithFilters(@Param("q") String q,
+                                          @Param("from") LocalDate from,
+                                          @Param("to") LocalDate to,
+                                          @Param("loc") String loc,
+                                          Pageable pageable);
 
     boolean existsByMisc(String misc);
     boolean existsByDescription(String description);

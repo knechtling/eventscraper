@@ -41,21 +41,22 @@ public class EventController {
         this.eventRepository = eventRepository;
     }
 
-    @GetMapping
+@GetMapping
     public String getEvents(@RequestParam(value = "search", required = false) String search,
+                            @RequestParam(value = "start", required = false) String start,
+                            @RequestParam(value = "end", required = false) String end,
+                            @RequestParam(value = "loc", required = false) String loc,
                             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
                             @RequestParam(value = "size", required = false, defaultValue = "24") int size,
                             Model model) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by("date").ascending());
-        Page<Event> eventsPage;
-        if (search != null && !search.isEmpty()) {
-            eventsPage = eventService.searchUpcomingEventsByTitleOrDescription(search, pageable);
-        } else {
-            eventsPage = eventService.getUpcomingEvents(pageable);
-        }
+        Page<Event> eventsPage = eventService.searchWithFilters(search, start, end, loc, pageable);
         model.addAttribute("eventsPage", eventsPage);
         model.addAttribute("events", eventsPage.getContent());
         model.addAttribute("search", search);
+        model.addAttribute("start", start);
+        model.addAttribute("end", end);
+        model.addAttribute("loc", loc);
         model.addAttribute("size", size);
         model.addAttribute("locations", eventService.getUniqueLocationsFromUpcoming());
         return "welcome";

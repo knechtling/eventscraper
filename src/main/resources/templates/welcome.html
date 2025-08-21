@@ -14,17 +14,20 @@
     <h1>Veranstaltungen</h1>
     <div th:replace="~{fragments/darkmode-button :: darkmodeButton}"></div>
     <div class="search-box">
-        <form action="/" method="get">
+        <form id="filterForm" action="/" method="get">
             <input type="text" name="search" placeholder="Veranstaltungen suchen..." th:value="${search}">
+            <!-- date range -->
+            <input type="text" id="dateRangePicker" placeholder="Zeitraum auswählen"
+                   th:attr="data-start=${start},data-end=${end}">
+            <input type="hidden" name="start" id="startDate" th:value="${start}">
+            <input type="hidden" name="end" id="endDate" th:value="${end}">
+            <!-- location -->
+            <select id="locationFilter" name="loc">
+                <option value="">Alle Orte</option>
+                <option th:each="location : ${locations}" th:value="${location}" th:text="${location}" th:selected="${loc} == ${location}"></option>
+            </select>
             <button type="submit">Suchen</button>
         </form>
-    </div>
-    <div class="filter-box">
-        <input type="text" id="dateRangePicker" placeholder="Zeitraum auswählen">
-        <select id="locationFilter">
-            <option value="">Alle Orte</option>
-            <option th:each="location : ${locations}" th:value="${location}" th:text="${location}"></option>
-        </select>
     </div>
     <div class="events-grid" id="events">
         <div class="event-card" th:each="event : ${events}" th:attr="data-date=${event.date},data-location=${event.location}" th:onclick="|window.location='@{/event/details/{id}(id=${event.id})}'|" style="cursor:pointer;">
@@ -51,9 +54,13 @@
 
     <div class="pagination" th:if="${eventsPage != null}">
         <div class="pager" style="display:flex;gap:8px;justify-content:center;align-items:center;margin:16px 0;">
-            <a class="btn" th:if="${eventsPage.hasPrevious()}" th:href="@{/(page=${eventsPage.number-1},size=${size},search=${search})}" aria-label="Vorherige Seite">&laquo; Zurück</a>
+            <a class="btn" th:if="${eventsPage.hasPrevious()}"
+               th:href="@{/(page=${eventsPage.number-1},size=${size},search=${search},start=${start},end=${end},loc=${loc})}"
+               aria-label="Vorherige Seite">&laquo; Zurück</a>
             <span>Seite <span th:text="${eventsPage.number + 1}"></span> / <span th:text="${eventsPage.totalPages}"></span></span>
-            <a class="btn" th:if="${eventsPage.hasNext()}" th:href="@{/(page=${eventsPage.number+1},size=${size},search=${search})}" aria-label="Nächste Seite">Weiter &raquo;</a>
+            <a class="btn" th:if="${eventsPage.hasNext()}"
+               th:href="@{/(page=${eventsPage.number+1},size=${size},search=${search},start=${start},end=${end},loc=${loc})}"
+               aria-label="Nächste Seite">Weiter &raquo;</a>
         </div>
     </div>
 
