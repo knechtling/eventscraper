@@ -16,10 +16,10 @@
             <div th:each="s : ${scrapers}" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
                 <span class="badge" th:text="${s.name}"></span>
                 <span class="badge" th:classappend=" ${s.status == 'OK'} ? 'brand' : ''" th:text="${s.status}"></span>
-                <a class="btn" th:href="@{'/admin/scrapers/run'(name=${s.name})}">Run now</a>
+                <a class="btn" th:href="@{'/admin/scraper-health/run'(name=${s.name})}">Run now</a>
             </div>
         </div>
-        <div style="margin-top:8px"><a class="btn primary" href="/admin/scrapers/run">Run all</a></div>
+        <div style="margin-top:8px"><a class="btn primary" href="/admin/scraper-health/run">Run all</a></div>
     </div>
 
     <table>
@@ -28,6 +28,7 @@
             <th>Scraper</th>
             <th>Start</th>
             <th>Ende</th>
+            <th>Dauer</th>
             <th>Added</th>
             <th>Updated</th>
             <th>Errors</th>
@@ -37,8 +38,9 @@
         <tbody>
         <tr th:each="r : ${runs}">
             <td th:text="${r.scraperName}"></td>
-            <td th:text="${r.startedAt}"></td>
-            <td th:text="${r.finishedAt}"></td>
+            <td th:text="${#temporals.format(r.startedAt, 'yyyy-MM-dd HH:mm:ss', 'Europe/Berlin')}"></td>
+            <td th:text="${r.finishedAt != null ? #temporals.format(r.finishedAt, 'yyyy-MM-dd HH:mm:ss', 'Europe/Berlin') : ''}"></td>
+            <td th:text="${r.finishedAt != null ? T(java.time.Duration).between(r.startedAt, r.finishedAt).toSeconds() + 's' : ''}"></td>
             <td th:text="${r.added}"></td>
             <td th:text="${r.updated}"></td>
             <td th:text="${r.errors}"></td>
