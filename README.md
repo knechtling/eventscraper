@@ -23,19 +23,48 @@ Examples:
 - `/?search=punk&loc=Hanse%203`
 
 ## Docker Compose (Postgres + app, prod profile)
-A compose setup is provided to run Postgres and the app in containers:
+A compose setup is provided to run Postgres and the app in containers. The app can run directly (host port) or behind an nginx-proxy + letsencrypt companion via an external network.
 
-1) Build the app jar
-- `./mvnw -q -DskipTests package`
-
-2) Start containers
-- `docker compose up --build`
+1) Build and start
+- Local (host port, not using proxy):
+  - `docker compose up --build`
+- Behind nginx-proxy (recommended):
+  - Ensure an external Docker network exists (created by your proxy stack): `docker network create proxy-tier` (noop if exists)
+  - The compose is already configured with:
+    - `VIRTUAL_HOST=events.antonliepelt.cc`
+    - `LETSENCRYPT_HOST=events.antonliepelt.cc`
+    - `LETSENCRYPT_EMAIL=anton.liepelt@gmx.de`
+    - `VIRTUAL_PORT=8080`, `expose: 8080`, and joins `proxy-tier`
+  - `docker compose up -d --build`
 
 Defaults in `docker-compose.yml`:
 - DB: postgres:16-alpine, database `eventscraper`, user `events`, password `events`
-- App: profile `prod`, connects to `jdbc:postgresql://db:5432/eventscraper`, exposes `8080`
+- App: profile `prod`, connects to `jdbc:postgresql://db:5432/eventscraper`, exposes `8080` (no host port if using proxy)
 
 Stop with `docker compose down`.
+
+## Deploy via rsync to server
+Use rsync to sync from your dev machine to the server and update the stack.
+
+- Sync (adjust paths if needed):
+```
+export SERVER=root@debian
+export DEST=/opt/eventscraper
+rsync -avz --delete \
+  --exclude '.git' --exclude 'target' --exclude '.idea' \
+  --exclude '.vscode' --exclude '*.tar' --exclude '*.zip' \
+  /home/anton/projects/eventscraper/ "$SERVER:$DEST/"
+```
+
+- On the server:
+```
+ssh root@debian
+cd /opt/eventscraper
+# ensure external network exists if using nginx-proxy
+docker network ls | grep proxy-tier || docker network create proxy-tier
+# rebuild and start
+docker compose up -d --build
+```
 
 ## Tests and scheduler
 - Tests use an in-memory H2 database.
