@@ -50,46 +50,70 @@ public class ScraperService {
     @Scheduled(fixedRate = 3600000)
     @Transactional
     public void scrapeAndSaveEvents() {
+        runAllNow();
+    }
+
+    @Transactional
+    public void runAllNow() {
         for (Scraper scraper : scrapers) {
-            String scraperName = scraper.getClass().getSimpleName();
-            ScrapeRun run = new ScrapeRun(scraperName, Instant.now());
-            run.setMessage("started");
-            run = scrapeRunRepository.save(run);
-            int added = 0, updated = 0, errors = 0;
-            try {
-                List<Event> scraped = scraper.scrapeEvents();
-                // Normalize, drop invalid/past, hash
-                List<Event> normalized = scraped.stream()
-                        .filter(e -> e.getDate() != null && !e.getDate().isBefore(LocalDate.now()))
-                        .peek(this::normalize)
-                        .peek(e -> e.setEventHash(EventHasher.generateHash(e)))
-                        .toList();
+            runScraper(scraper);
+        }
+    }
 
-                // In-batch de-duplication by eventHash: keep the "best" instance
-                java.util.Map<String, Event> byHash = new java.util.LinkedHashMap<>();
-                for (Event e : normalized) {
-                    Event existing = byHash.get(e.getEventHash());
-                    if (existing == null || isBetter(e, existing)) {
-                        byHash.put(e.getEventHash(), e);
-                    }
-                }
-                List<Event> events = new java.util.ArrayList<>(byHash.values());
-
-                SaveStats stats = saveEventsSmart(events);
-                added = stats.added;
-                updated = stats.updated;
-                System.out.println("Scraped " + events.size() + " events from " + scraperName);
-            } catch (Exception ex) {
-                errors += 1;
-                run.setMessage((run.getMessage() == null ? "" : run.getMessage() + " | ") + ex.getClass().getSimpleName());
-                throw ex;
-            } finally {
-                run.setAdded(run.getAdded() + added);
-                run.setUpdated(run.getUpdated() + updated);
-                run.setErrors(run.getErrors() + errors);
-                run.setFinishedAt(Instant.now());
-                scrapeRunRepository.save(run);
+    @Transactional
+    public void runOne(String scraperSimpleName) {
+        for (Scraper scraper : scrapers) {
+            if (scraper.getClass().getSimpleName().equals(scraperSimpleName)) {
+                runScraper(scraper);
+                return;
             }
+        }
+        throw new IllegalArgumentException("Unknown scraper: " + scraperSimpleName);
+    }
+
+    public List<String> getScraperNames() {
+        return scrapers.stream().map(s -> s.getClass().getSimpleName()).toList();
+    }
+
+    private void runScraper(Scraper scraper) {
+        String scraperName = scraper.getClass().getSimpleName();
+        ScrapeRun run = new ScrapeRun(scraperName, Instant.now());
+        run.setMessage("started");
+        run = scrapeRunRepository.save(run);
+        int added = 0, updated = 0, errors = 0;
+        try {
+            List<Event> scraped = scraper.scrapeEvents();
+            // Normalize, drop invalid/past, hash
+            List<Event> normalized = scraped.stream()
+                    .filter(e -> e.getDate() != null && !e.getDate().isBefore(LocalDate.now()))
+                    .peek(this::normalize)
+                    .peek(e -> e.setEventHash(EventHasher.generateHash(e)))
+                    .toList();
+
+            // In-batch de-duplication by eventHash: keep the "best" instance
+            java.util.Map<String, Event> byHash = new java.util.LinkedHashMap<>();
+            for (Event e : normalized) {
+                Event existing = byHash.get(e.getEventHash());
+                if (existing == null || isBetter(e, existing)) {
+                    byHash.put(e.getEventHash(), e);
+                }
+            }
+            List<Event> events = new java.util.ArrayList<>(byHash.values());
+
+            SaveStats stats = saveEventsSmart(events);
+            added = stats.added;
+            updated = stats.updated;
+            System.out.println("Scraped " + events.size() + " events from " + scraperName);
+        } catch (Exception ex) {
+            errors += 1;
+            run.setMessage((run.getMessage() == null ? "" : run.getMessage() + " | ") + ex.getClass().getSimpleName());
+            throw ex;
+        } finally {
+            run.setAdded(run.getAdded() + added);
+            run.setUpdated(run.getUpdated() + updated);
+            run.setErrors(run.getErrors() + errors);
+            run.setFinishedAt(Instant.now());
+            scrapeRunRepository.save(run);
         }
     }
 

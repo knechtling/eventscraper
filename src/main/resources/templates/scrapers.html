@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scraper Health</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>Scraper Health</h1>
+
+    <div class="card" style="margin:12px 0; padding:12px;">
+        <h2>Scrapers</h2>
+        <div class="badges" th:if="${scrapers}">
+            <div th:each="s : ${scrapers}" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+                <span class="badge" th:text="${s.name}"></span>
+                <span class="badge" th:classappend=" ${s.status == 'OK'} ? 'brand' : ''" th:text="${s.status}"></span>
+                <a class="btn" th:href="@{'/admin/scrapers/run'(name=${s.name})}">Run now</a>
+            </div>
+        </div>
+        <div style="margin-top:8px"><a class="btn primary" href="/admin/scrapers/run">Run all</a></div>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Scraper</th>
+            <th>Start</th>
+            <th>Ende</th>
+            <th>Added</th>
+            <th>Updated</th>
+            <th>Errors</th>
+            <th>Message</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="r : ${runs}">
+            <td th:text="${r.scraperName}"></td>
+            <td th:text="${r.startedAt}"></td>
+            <td th:text="${r.finishedAt}"></td>
+            <td th:text="${r.added}"></td>
+            <td th:text="${r.updated}"></td>
+            <td th:text="${r.errors}"></td>
+            <td th:text="${r.message}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p><a href="/">Zurück</a></p>
+</div>
+</body>
+</html>
