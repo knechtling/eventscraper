@@ -1,5 +1,9 @@
 package com.hansablock.eventscraper;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -34,7 +38,7 @@ class EventRepositoryUpcomingTest {
         assertEquals("Today", upcoming.get(0).getTitle());
         assertEquals("Future", upcoming.get(1).getTitle());
 
-        List<Event> searched = repo.searchUpcoming("tod", today);
+        List<Event> searched = repo.searchUpcoming("tod", today, PageRequest.of(0, 10)).getContent();
         assertEquals(1, searched.size());
         assertEquals("Today", searched.get(0).getTitle());
     }

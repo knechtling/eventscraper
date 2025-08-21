@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
 </head>
 <body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
     <h1>Veranstaltungen</h1>
     <div th:replace="~{fragments/darkmode-button :: darkmodeButton}"></div>
@@ -26,7 +27,7 @@
         </select>
     </div>
     <div class="events-grid" id="events">
-        <div class="event-card" th:each="event : ${events}" th:attr="data-date=${event.date},data-location=${event.location}">
+        <div class="event-card" th:each="event : ${events}" th:attr="data-date=${event.date},data-location=${event.location}" th:onclick="|window.location='@{/event/details/{id}(id=${event.id})}'|" style="cursor:pointer;">
             <div class="event-thumbnail" th:attr="data-src=${event.thumbnail}"></div>
             <div class="event-details">
                 <div class="badges">
@@ -47,51 +48,22 @@
             </div>
         </div>
     </div>
+
+    <div class="pagination" th:if="${eventsPage != null}">
+        <div class="pager" style="display:flex;gap:8px;justify-content:center;align-items:center;margin:16px 0;">
+            <a class="btn" th:if="${eventsPage.hasPrevious()}" th:href="@{/(page=${eventsPage.number-1},size=${size},search=${search})}" aria-label="Vorherige Seite">&laquo; Zurück</a>
+            <span>Seite <span th:text="${eventsPage.number + 1}"></span> / <span th:text="${eventsPage.totalPages}"></span></span>
+            <a class="btn" th:if="${eventsPage.hasNext()}" th:href="@{/(page=${eventsPage.number+1},size=${size},search=${search})}" aria-label="Nächste Seite">Weiter &raquo;</a>
+        </div>
+    </div>
+
     <div class="footer">
         <span>Letzte Aktualisierung in Echtzeit während der Tests</span>
-        <a href="/admin/scrapers">Scraper Health</a>
+        <a href="/admin/scraper-health">Scraper Health</a>
     </div>
 </div>
 <script src="/js/lazyLoadImages.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const dateRangePicker = flatpickr("#dateRangePicker", {
-            mode: "range",
-            dateFormat: "d.m.Y",
-            locale: "de",
-            onChange: filterEvents
-        });
-
-        const locationFilter = document.getElementById('locationFilter');
-        locationFilter.addEventListener('change', filterEvents);
-
-        function filterEvents() {
-            const selectedLocation = locationFilter.value.toLowerCase();
-            const [startDate, endDate] = dateRangePicker.selectedDates;
-
-            document.querySelectorAll('.event-card').forEach(card => {
-                const locationText = (card.getAttribute('data-location') || '').toLowerCase();
-                const isoDate = card.getAttribute('data-date');
-                let eventDate = null;
-                if (isoDate) {
-                    const [y, m, d] = isoDate.split('-').map(Number);
-                    eventDate = new Date(y, m - 1, d);
-                }
-
-                const matchesLocation = !selectedLocation || locationText === selectedLocation;
-                const matchesDate =
-                    (!startDate || (eventDate && eventDate >= startDate)) &&
-                    (!endDate || (eventDate && eventDate <= endDate));
-
-                if ((!selectedLocation && !startDate && !endDate) || (matchesLocation && matchesDate)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-    });
-</script>
+<script src="/js/home.js"></script>
 </body>
 </html>

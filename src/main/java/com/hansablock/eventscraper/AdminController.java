@@ -21,7 +21,7 @@ public class AdminController {
         this.scraperService = scraperService;
     }
 
-    @GetMapping("/admin/scrapers")
+@GetMapping("/admin/scraper-health")
     public String scraperHealth(Model model) {
         var names = scraperService.getScraperNames();
         java.util.List<java.util.Map<String,Object>> statuses = new java.util.ArrayList<>();
@@ -52,7 +52,13 @@ public class AdminController {
         return "scrapers";
     }
 
-    @GetMapping("/admin/scrapers/run")
+    // Backwards-compat alias for old link
+    @GetMapping("/admin/scrapers")
+    public String scraperHealthAlias() {
+        return "redirect:/admin/scraper-health";
+    }
+
+    @GetMapping("/admin/scraper-health/run")
     public String runScrapers(@RequestParam(value = "name", required = false) String name, RedirectAttributes ra) {
         try {
             if (name == null || name.isBlank()) {
@@ -65,6 +71,15 @@ public class AdminController {
         } catch (Exception ex) {
             ra.addFlashAttribute("msg", "Error: " + ex.getMessage());
         }
-        return "redirect:/admin/scrapers";
+        return "redirect:/admin/scraper-health";
+    }
+
+    // Backwards-compat alias for old run link
+    @GetMapping("/admin/scrapers/run")
+    public String runScrapersAlias(@RequestParam(value = "name", required = false) String name) {
+        if (name == null || name.isBlank()) {
+            return "redirect:/admin/scraper-health/run";
+        }
+        return "redirect:/admin/scraper-health/run?name=" + org.springframework.web.util.UriUtils.encode(name, java.nio.charset.StandardCharsets.UTF_8);
     }
 }

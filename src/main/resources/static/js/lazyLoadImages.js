@@ -1,3 +1,17 @@
+(function(){
+  const items=document.querySelectorAll('.event-thumbnail');
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const el=e.target;const src=el.getAttribute('data-src');
+        if(src){el.style.backgroundImage=`url(${src})`;el.removeAttribute('data-src');}
+        io.unobserve(el);
+      }
+    })
+  },{rootMargin:'200px'});
+  items.forEach(el=>io.observe(el));
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
     // Select all thumbnails with a "data-src" attribute
     const thumbnails = document.querySelectorAll('.event-thumbnail[data-src]');

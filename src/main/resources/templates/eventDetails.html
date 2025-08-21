@@ -9,21 +9,33 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
 </head>
 <body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
-    <div th:replace="fragments/darkmode-button :: darkmodeButton"></div>
-    <div class="event-thumbnail" th:style="'background-image: url(' + ${event.thumbnail} + ')'"></div>
-    <div class="event-details">
-        <h1 th:text="${event.title}">Event Title</h1>
-        <p th:if="${event.location}"><strong>Location:</strong> <span th:text="${event.location}">Event Location</span></p>
-        <p th:if="${event.formattedDate}"><strong>Date:</strong> <span th:text="${event.formattedDate}">Event Date</span></p>
-        <p th:if="${event.einlass}"><strong>Einlass:</strong> <span th:text="${event.einlass}">Einlass Time</span></p>
-        <p th:if="${event.beginn}"><strong>Beginn:</strong> <span th:text="${event.beginn}">Beginn Time</span></p>
-        <p th:if="${event.price}"><strong>Price:</strong> <span th:text="${event.price}">Event Price</span></p>
-        <p th:if="${event.description}"><strong>Description:</strong></p>
-        <p th:if="${event.description}" th:utext="${event.description}">Detailed description of the event goes here...</p>
-        <p th:if="${event.misc}"><span th:utext="${event.misc}"></span></p>
-        <p th:if="${event.sourceUrl}"><a th:href="${event.sourceUrl}" target="_blank" rel="noopener">Zur Veranstaltungsseite</a></p>
-        <a href="/" class="back-link">Back to Events</a>
+    <div th:replace="~{fragments/darkmode-button :: darkmodeButton}"></div>
+    <div class="details-hero" th:style="'background-image: url(' + ${event.thumbnail} + ')'" aria-hidden="true"></div>
+    <div class="details-grid">
+        <div class="card">
+            <h1 th:text="${event.title}">Event Title</h1>
+            <div class="badges">
+                <span class="badge" th:text="${event.formattedDate}"></span>
+                <span class="badge" th:text="${event.location}"></span>
+                <span class="badge brand" th:if="${event.price}" th:text="${event.price}"></span>
+            </div>
+            <div class="event-meta">
+                <p th:if="${event.einlass}"><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
+                <p th:if="${event.beginn}"><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
+            </div>
+            <div th:if="${event.description}" th:utext="${event.description}"></div>
+            <div th:if="${event.misc}" th:utext="${event.misc}"></div>
+        </div>
+        <div class="card">
+            <h2>Links</h2>
+            <p>
+                <a class="btn" th:href="@{/event/details/{id}.ics(id=${event.id})}">Als ICS exportieren</a>
+            </p>
+            <p th:if="${event.sourceUrl}"><a class="btn primary" th:href="${event.sourceUrl}" target="_blank" rel="noopener">Zur Veranstaltungsseite</a></p>
+            <p><a class="btn" href="/">Zur Übersicht</a></p>
+        </div>
     </div>
 </div>
 </body>

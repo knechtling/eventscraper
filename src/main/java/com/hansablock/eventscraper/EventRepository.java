@@ -1,5 +1,7 @@
 package com.hansablock.eventscraper;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,8 +24,12 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // Upcoming-only queries
     List<Event> findAllByDateGreaterThanEqualOrderByDateAsc(LocalDate date);
 
-    @Query("SELECT e FROM Event e WHERE e.date >= :date AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%'))) ORDER BY e.date ASC")
-    List<Event> searchUpcoming(@Param("q") String q, @Param("date") LocalDate date);
+    // Pageable upcoming list
+    Page<Event> findAllByDateGreaterThanEqual(LocalDate date, Pageable pageable);
+
+    @Query(value = "SELECT e FROM Event e WHERE e.date >= :date AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%'))) ORDER BY e.date ASC",
+           countQuery = "SELECT COUNT(e) FROM Event e WHERE e.date >= :date AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :q, '%')))")
+    Page<Event> searchUpcoming(@Param("q") String q, @Param("date") LocalDate date, Pageable pageable);
 
     boolean existsByMisc(String misc);
     boolean existsByDescription(String description);
