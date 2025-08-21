@@ -1,9 +1,8 @@
-version: "3.8"
-
 services:
   db:
     image: postgres:16-alpine
     container_name: eventscraper_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: eventscraper
       POSTGRES_USER: events
@@ -18,15 +17,31 @@ services:
     container_name: eventscraper_app
     depends_on:
       - db
+    restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
       JDBC_URL: jdbc:postgresql://db:5432/eventscraper
       DB_USER: events
       DB_PASS: events
       PORT: 8080
-    ports:
-      - "8080:8080"
+      # nginx-proxy + letsencrypt companion
+      VIRTUAL_HOST: events.antonliepelt.cc
+      VIRTUAL_PORT: 8080
+      LETSENCRYPT_HOST: events.antonliepelt.cc
+      LETSENCRYPT_EMAIL: anton.liepelt@gmx.de
+    expose:
+      - "8080"
+    # Do not publish host ports; proxy will route traffic via proxy-tier network
+    # ports:
+    #   - "8080:8080"  # change the left-hand port if exposing directly
+    networks:
+      - default
+      - proxy-tier
     # If you prefer using the built JAR instead of building in Compose, comment build: and add image: tag that you push.
 
 volumes:
   db_data:
+
+networks:
+  proxy-tier:
+    external: true
