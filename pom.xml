@@ -73,6 +73,7 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+            <version>10.22.0</version>
         </dependency>
 
     </dependencies>
@@ -100,7 +101,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>10.15.0</version>
+                <version>10.22.0</version>
             </plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
