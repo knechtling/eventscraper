@@ -3,10 +3,13 @@ package com.hansablock.eventscraper.scraper;
 import com.hansablock.eventscraper.Event;
 import com.hansablock.eventscraper.EventHasher;
 import com.hansablock.eventscraper.EventRepository;
+import com.hansablock.eventscraper.ScrapeRun;
+import com.hansablock.eventscraper.ScrapeRunRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,11 +30,12 @@ public class ScraperService {
     private static final int MAX_DESC = 2000;
     private static final int MAX_MISC = 4000;
 
-    private static final Map<String, String> LOCATION_FALLBACK = Map.of(
-            "Chemiefabrik", "https://www.chemiefabrik.info/gigs/",
-            "Hanse3", "https://hanse3.de/Veranstaltungen/",
-            "Scheune Dresden", "https://scheune.org",
-            "Tante Ju", "https://www.liveclub-dresden.de/events/"
+    private static final Map<String, String> LOCATION_FALLBACK = java.util.Map.ofEntries(
+            java.util.Map.entry("Chemiefabrik", "https://www.chemiefabrik.info/gigs/"),
+            java.util.Map.entry("Hanse3", "https://hanse3.de/Veranstaltungen/"),
+            java.util.Map.entry("Hanse 3", "https://hanse3.de/Veranstaltungen/"),
+            java.util.Map.entry("Scheune Dresden", "https://scheune.org"),
+            java.util.Map.entry("Tante Ju", "https://www.liveclub-dresden.de/events/")
     );
 
     @Autowired
@@ -41,6 +45,7 @@ public class ScraperService {
     }
 
     @Scheduled(fixedRate = 3600000)
+    @Transactional
     public void scrapeAndSaveEvents() {
         for (Scraper scraper : scrapers) {
             List<Event> scraped = scraper.scrapeEvents();
@@ -151,7 +156,15 @@ public class ScraperService {
             eventRepository.findByEventHash(event.getEventHash())
                     .ifPresentOrElse(
                             existing -> updateExisting(existing, event),
-                            () -> eventRepository.save(event)
+                            () -> {
+                                try {
+                                    eventRepository.save(event);
+                                } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                                    // Handle concurrent insert of same hash: fetch and update
+                                    eventRepository.findByEventHash(event.getEventHash())
+                                            .ifPresent(existing -> updateExisting(existing, event));
+                                }
+                            }
                     );
         });
     }

@@ -38,7 +38,7 @@
                 <div class="event-meta">
                     <p th:if="${event.einlass}"><strong>Einlass:</strong> <span th:text="${event.einlass}"></span></p>
                     <p th:if="${event.beginn}"><strong>Beginn:</strong> <span th:text="${event.beginn}"></span></p>
-                    <p th:if="${event.description}"><span th:utext="${event.description}"></span></p>
+                    <p th:if="${event.description}"><span th:text="${event.descriptionPreview}"></span></p>
                 </div>
             </div>
             <div class="mehr-anzeigen">

@@ -7,6 +7,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
+import org.jsoup.Jsoup;
+
 @Entity
 public class Event {
     @Id
@@ -173,6 +175,17 @@ public class Event {
     @Override
     public int hashCode() {
         return Objects.hash(id, title, location, date, description, einlass, beginn, price);
+    }
+
+    @Transient
+    public String getDescriptionPreview() {
+        if (description == null) return null;
+        String text = Jsoup.parse(description).text();
+        text = text.replaceAll("\n+", " ").trim();
+        if (text.length() > 240) {
+            return text.substring(0, 237) + "...";
+        }
+        return text;
     }
 
     @Override
