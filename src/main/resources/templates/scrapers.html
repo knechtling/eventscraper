@@ -16,10 +16,10 @@
             <div th:each="s : ${scrapers}" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
                 <span class="badge" th:text="${s.name}"></span>
                 <span class="badge" th:classappend=" ${s.status == 'OK'} ? 'brand' : ''" th:text="${s.status}"></span>
-                <a class="btn" th:href="@{'/admin/scraper-health/run'(name=${s.name})}">Run now</a>
+                <a class="btn" th:href="@{'/admin/scrapers/run'(name=${s.name})}">Run now</a>
             </div>
         </div>
-        <div style="margin-top:8px"><a class="btn primary" href="/admin/scraper-health/run">Run all</a></div>
+        <div style="margin-top:8px"><a class="btn primary" href="/admin/scrapers/run">Run all</a></div>
     </div>
 
     <table>
