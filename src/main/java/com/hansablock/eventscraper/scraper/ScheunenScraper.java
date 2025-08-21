@@ -141,10 +141,26 @@ public class ScheunenScraper implements Scraper {
                             price = String.join(" | ", priceBits);
                         }
 
-                        // Parse more specific location if present
-                        java.util.regex.Matcher mLoc = java.util.regex.Pattern.compile("scheune\\s+([A-Za-zÄÖÜäöüß]+)").matcher(allText);
-                        if (mLoc.find()) {
-                            location = "Scheune " + mLoc.group(1);
+                        // Parse more specific location if present from right column header line
+                        String headerBlock = detailDoc.select("#cont .col_right").text();
+                        java.util.regex.Matcher mHeaderLoc = java.util.regex.Pattern.compile(
+                                "(?i)(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag)\\s*\\|\\s*\\d{1,2}\\.\\s*[A-Za-zÄÖÜäöüß]+\\s+(.+?)\\s+\\d{1,2}:\\d{2}\\s*Uhr"
+                        ).matcher(headerBlock);
+                        if (mHeaderLoc.find()) {
+                            String locCandidate = mHeaderLoc.group(2).trim();
+                            // normalize common variants
+                            if (locCandidate.toLowerCase().startsWith("scheune")) {
+                                // e.g., "scheune Vorplatz" -> "Scheune Vorplatz"
+                                location = locCandidate.substring(0,1).toUpperCase() + locCandidate.substring(1);
+                            } else {
+                                location = locCandidate;
+                            }
+                        } else {
+                            // Fallback: try simple "scheune <word>" within page text
+                            java.util.regex.Matcher mLoc = java.util.regex.Pattern.compile("scheune\\s+([A-Za-zÄÖÜäöüß]+)").matcher(allText);
+                            if (mLoc.find()) {
+                                location = "Scheune " + mLoc.group(1);
+                            }
                         }
 
                         // Parse thumbnail from detail page
