@@ -136,12 +136,12 @@ public class ScheunenScraper implements Scraper {
                             priceBits.add("Eintritt frei");
                         }
                         // AK: ... and VVK: ... limited tokens (up to 25 chars of typical price chars)
-                        java.util.regex.Matcher mAk = java.util.regex.Pattern.compile("(?i)\\bAK:?\\s*([\\p{L}\\p{N}€.,/–- ]{1,25})").matcher(rightText);
+                        java.util.regex.Matcher mAk = java.util.regex.Pattern.compile("(?i)\\bAK:?\\s*([\\p{L}\\p{N}€.,/\\-– ]{1,25})").matcher(rightText);
                         while (mAk.find()) {
                             String val = mAk.group(1).trim();
                             if (!val.isEmpty()) priceBits.add("AK: " + val);
                         }
-                        java.util.regex.Matcher mVvk = java.util.regex.Pattern.compile("(?i)\\bVVK:?\\s*([\\p{L}\\p{N}€.,/–- ]{1,25})").matcher(rightText);
+                        java.util.regex.Matcher mVvk = java.util.regex.Pattern.compile("(?i)\\bVVK:?\\s*([\\p{L}\\p{N}€.,/\\-– ]{1,25})").matcher(rightText);
                         while (mVvk.find()) {
                             String val = mVvk.group(1).trim();
                             if (!val.isEmpty()) priceBits.add("VVK: " + val);
