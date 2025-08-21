@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS event (
 CREATE TABLE IF NOT EXISTS scrape_run (
     id BIGSERIAL PRIMARY KEY,
     scraper_name VARCHAR(255),
-    started_at TIMESTAMPTZ,
-    finished_at TIMESTAMPTZ,
+    started_at TIMESTAMP WITH TIME ZONE,
+    finished_at TIMESTAMP WITH TIME ZONE,
     added INT NOT NULL DEFAULT 0,
     updated INT NOT NULL DEFAULT 0,
     errors INT NOT NULL DEFAULT 0,
